@@ -1,7 +1,8 @@
 import pandas as pd
 import numpy as np
+import os
 
-aggsFuncs = {
+aggFuncs = {
   'Albumin': np.mean,
   'ALP': np.mean,
   'ALT': np.mean,
@@ -49,30 +50,40 @@ def readPatientData(path):
   data = pd.read_csv(path)
   descriptors = data[data['Time']=='00:00'].pivot(index='Time',columns='Parameter', values='Value')
   timeseries = data[data['Time']!='00:00'].pivot_table(index='Time',columns='Parameter', values='Value', aggfunc=max)
-  return  descriptors, timeseries
+  return  descriptors.replace(-1, np.nan), timeseries
 
-def initialiseEmptyDataDict(maxTime, interval):
+def initialiseEmptyDataDict(columns, maxTime, interval):
   data = {}
   numBuckets = int(np.ceil(maxTime / interval))
-  for c in aggsFuncs.keys():
+  for c in columns:
     data[c] = []
     for i in range(numBuckets):
       data[c].append([])
   return data
 
-def bucketTimeseries(ts, interval):
-  columns = ts.columns
-  data = initialiseEmptyDataDict(48*60, interval)
+def bucketTimeseries(columns, ts, interval):
+  tscolumns = ts.columns
+  data = initialiseEmptyDataDict(columns, 48*60, interval)
   for idx in range(ts.shape[0]):
     bucket = int(timeToMins(ts.iloc[idx].name) // interval)
-    for c in columns:
+    for c in tscolumns:
       val = ts.iloc[idx][c]
+      if c not in data:
+        continue
       if not pd.isna(val):
         data[c][bucket].append(val)
   aggData = {}
-  for c in aggsFuncs.keys():
-    aggData[c] = list(map(lambda l: np.nan if len(l) == 0 else aggsFuncs[c](l), data[c]))
+  for c in columns:
+    aggData[c] = list(map(lambda l: np.nan if len(l) == 0 else aggFuncs[c](l), data[c]))
   return pd.DataFrame(data=aggData)
+
+def loadPatientDatasets(folder):
+  datasets = {}
+  columns = aggFuncs.keys()
+  for f in os.listdir(folder):
+    static, ts = readPatientData(os.path.join(folder, f))
+    datasets[int(static['RecordID'])] = [static, bucketTimeseries(columns, ts, 60)]
+  return datasets
 
 def readPatientOutcomes(path):
   return pd.read_csv(path)

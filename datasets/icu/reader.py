@@ -84,6 +84,3 @@ def loadPatientDatasets(folder):
     static, ts = readPatientData(os.path.join(folder, f))
     datasets[int(static['RecordID'])] = [static, bucketTimeseries(columns, ts, 60)]
   return datasets
-
-def readPatientOutcomes(path):
-  return pd.read_csv(path)

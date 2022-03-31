@@ -83,4 +83,4 @@ class Dataset(td.Dataset):
         outcome = self.outcomes[self.outcomes['RecordID'] == recId]
         y = outcome['In-hospital_death'].iloc[0]
         x, masking, deltaT = transformTimeSeries(ts, columnIndexes)
-        return descriptors.to_dict(), x, masking, deltaT, y
+        return {k: v[0].item() for k, v in descriptors.items()}, x, masking, deltaT, y

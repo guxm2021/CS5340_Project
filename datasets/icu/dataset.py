@@ -78,9 +78,9 @@ class Dataset(td.Dataset):
         return len(self.files)
 
     def __getitem__(self, index):
-        descriptors, ts = readPatientData(os.path.join(self.dir, self.files[index]))
-        recId = descriptors['RecordID'][0]
-        outcome = self.outcomes[self.outcomes['RecordID'] == recId]
-        y = outcome['In-hospital_death'].iloc[0]
-        x, masking, deltaT = transformTimeSeries(ts, columnIndexes)
-        return {k: v[0].item() for k, v in descriptors.items()}, x, masking, deltaT, y
+      descriptors, ts = readPatientData(os.path.join(self.dir, self.files[index]))
+      recId = descriptors['RecordID']
+      outcome = self.outcomes[self.outcomes['RecordID'] == recId]
+      y = outcome['In-hospital_death'].iloc[0]
+      x, masking, deltaT = transformTimeSeries(ts, columnIndexes)
+      return descriptors, x, masking, deltaT, y

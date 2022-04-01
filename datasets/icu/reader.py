@@ -48,9 +48,17 @@ def timeToMins(t):
 
 def readPatientData(path):
   data = pd.read_csv(path)
-  descriptors = data[data['Time']=='00:00'].pivot(index='Time',columns='Parameter', values='Value')
-  timeseries = data[data['Time']!='00:00'].pivot_table(index='Time',columns='Parameter', values='Value', aggfunc=max)
-  return  descriptors.replace(-1, np.nan), timeseries
+  desc = data[data['Time']=='00:00']
+  descriptors = {
+    'RecordID': int(desc[desc['Parameter']=='RecordID'].values[0,2]),
+    'Age': desc[desc['Parameter']=='Age'].values[0,2],
+    'Gender': desc[desc['Parameter']=='Gender'].values[0,2],
+    'Height': desc[desc['Parameter']=='Height'].values[0,2],
+    'ICUType': desc[desc['Parameter']=='ICUType'].values[0,2],
+    'Weight': desc[desc['Parameter']=='ICUType'].values[0,2],
+  }
+  timeseries = data.pivot_table(index='Time',columns='Parameter', values='Value', aggfunc=max)
+  return  descriptors, timeseries
 
 def initialiseEmptyDataDict(columns, maxTime, interval):
   data = {}

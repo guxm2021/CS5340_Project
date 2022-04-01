@@ -11,8 +11,7 @@ Time,Parameter,Value
 00:00,RespRate,17
 00:00,SysABP,125
 00:00,Temp,35.7
-00:00,Urine,60
-00:00,Urine,620
+00:00,Urine,680
 00:00,Weight,98.64
 00:16,pH,7.33
 00:16,PaCO2,58

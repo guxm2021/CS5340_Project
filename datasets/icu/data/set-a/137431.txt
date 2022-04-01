@@ -14,7 +14,6 @@ Time,Parameter,Value
 00:00,SysABP,90
 00:00,Temp,36.9
 00:00,Urine,275
-00:00,Urine,20
 00:00,Weight,88.6
 00:10,pH,7.37
 00:10,PaCO2,42

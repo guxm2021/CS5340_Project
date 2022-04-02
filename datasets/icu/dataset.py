@@ -72,7 +72,7 @@ class Dataset(td.Dataset):
         self.outcomes = pd.read_csv(outcomes_file)
         self.dir = inputs_dir
         self.files = os.listdir(inputs_dir)
-        self.data = {}
+        self.files.sort()
 
     def __len__(self):
         return len(self.files)

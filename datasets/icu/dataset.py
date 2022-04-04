@@ -3,7 +3,8 @@ import numpy as np
 import pandas as pd
 import os
 
-from reader import readPatientData, timeToMins, aggFuncs
+from reader import readPatientData
+from process_data import timeToMins, aggFuncs
 
 columnIndexes = {
   'Albumin': 0,
@@ -71,7 +72,7 @@ def transformTimeSeries(ts, columnIndexes):
       colIdx = columnIndexes[c]
       val = values[c]
       if type(val) is np.ndarray:
-        val = aggFuncs(c)[val]
+        val = aggFuncs[c](val)
       if not pd.isna(val):
         x[colIdx, tIdx] = val
         masking[colIdx, tIdx] = 1

@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 import os
 
-from reader import readPatientData, timeToMins
+from reader import readPatientData, timeToMins, aggFuncs
 
 columnIndexes = {
   'Albumin': 0,
@@ -45,6 +45,18 @@ columnIndexes = {
   'Weight': 36 
 }
 
+#  The according to a study, the columns that matter are - 
+#  BUN, GCS, HCO3, HCT, Na, Urine, MechVent, ICUType (non-timeseries), Gender (non-timeseries)
+subsetColumnIndexes = {
+  'BUN': 0,
+  'GCS': 1,
+  'HCO3': 2,
+  'HCT': 3,
+  'Na': 4,
+  'Urine': 5,
+  'MechVent': 6
+}
+
 def transformTimeSeries(ts, columnIndexes):
   x = np.zeros((len(columnIndexes), ts.shape[0]))
   masking = np.zeros((len(columnIndexes), ts.shape[0]))
@@ -58,6 +70,8 @@ def transformTimeSeries(ts, columnIndexes):
         continue
       colIdx = columnIndexes[c]
       val = values[c]
+      if type(val) is np.ndarray:
+        val = aggFuncs(c)[val]
       if not pd.isna(val):
         x[colIdx, tIdx] = val
         masking[colIdx, tIdx] = 1
@@ -68,7 +82,8 @@ def transformTimeSeries(ts, columnIndexes):
   return x, masking, deltaT
 
 class Dataset(td.Dataset):
-    def __init__(self, inputs_dir, outcomes_file):
+    def __init__(self, inputs_dir, outcomes_file, columnIndexes=subsetColumnIndexes):
+        self.columnIndexes = columnIndexes
         self.outcomes = pd.read_csv(outcomes_file)
         self.dir = inputs_dir
         self.files = os.listdir(inputs_dir)
@@ -82,5 +97,5 @@ class Dataset(td.Dataset):
       recId = descriptors['RecordID']
       outcome = self.outcomes[self.outcomes['RecordID'] == recId]
       y = outcome['In-hospital_death'].iloc[0]
-      x, masking, deltaT = transformTimeSeries(ts, columnIndexes)
+      x, masking, deltaT = transformTimeSeries(ts, self.columnIndexes)
       return descriptors, x, masking, deltaT, y

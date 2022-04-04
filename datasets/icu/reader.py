@@ -48,7 +48,7 @@ def timeToMins(t):
 
 def readPatientData(path):
   data = pd.read_csv(path)
-  desc = data[data['Time']=='00:00']
+  desc = data[data['Time']=='00:00'].replace(-1, np.nan)
   descriptors = {
     'RecordID': int(desc[desc['Parameter']=='RecordID'].values[0,2]),
     'Age': desc[desc['Parameter']=='Age'].values[0,2],
@@ -57,7 +57,7 @@ def readPatientData(path):
     'ICUType': desc[desc['Parameter']=='ICUType'].values[0,2],
     'Weight': desc[desc['Parameter']=='ICUType'].values[0,2],
   }
-  timeseries = data.pivot_table(index='Time',columns='Parameter', values='Value', aggfunc=max)
+  timeseries = data.pivot_table(index='Time',columns='Parameter', values='Value', aggfunc=np.array)
   return  descriptors, timeseries
 
 def initialiseEmptyDataDict(columns, maxTime, interval):
@@ -75,11 +75,13 @@ def bucketTimeseries(columns, ts, interval):
   for idx in range(ts.shape[0]):
     bucket = int(timeToMins(ts.iloc[idx].name) // interval)
     for c in tscolumns:
-      val = ts.iloc[idx][c]
+      vals = ts.iloc[idx][c]
       if c not in data:
         continue
-      if not pd.isna(val):
-        data[c][bucket].append(val)
+      if type(vals) is np.ndarray:
+        data[c][bucket].extend(vals)
+      elif not pd.isna(vals):
+        data[c][bucket].append(vals)
   aggData = {}
   for c in columns:
     aggData[c] = list(map(lambda l: np.nan if len(l) == 0 else aggFuncs[c](l), data[c]))
@@ -92,3 +94,6 @@ def loadPatientDatasets(folder):
     static, ts = readPatientData(os.path.join(folder, f))
     datasets[int(static['RecordID'])] = [static, bucketTimeseries(columns, ts, 60)]
   return datasets
+
+def loadReferenceValues(path):
+  return pd.read_csv(path)

@@ -1,6 +1,8 @@
 import pandas as pd
 import numpy as np
 
+import os
+
 def readPatientData(path):
   data = pd.read_csv(path)
   desc = data[data['Time']=='00:00'].replace(-1, np.nan)
@@ -15,5 +17,7 @@ def readPatientData(path):
   timeseries = data.pivot_table(index='Time',columns='Parameter', values='Value', aggfunc=np.array)
   return descriptors, timeseries
 
-def loadReferenceValues(path):
+def loadReferenceValues(path=None):
+  if path == None:
+    path = os.path.join(os.path.dirname(__file__), 'data/reference-values.csv')
   return pd.read_csv(path)

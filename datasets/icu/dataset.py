@@ -1,3 +1,4 @@
+import torch
 import torch.utils.data as td
 import numpy as np
 import pandas as pd
@@ -135,5 +136,4 @@ class ProcessedDataSet(Dataset):
     ts = normaliseData(bucketTimeseries(self.columnIndexes.keys(), ts, 60), self.referenceValues)
     timestamps = np.arange(0, 48, 1, dtype=int)
     x, masking, _ = transformTimeSeries(ts, self.columnIndexes, timestamps)
-    return self.imputeData(x, masking), y
-
+    return torch.from_numpy(self.imputeData(x, masking)), y

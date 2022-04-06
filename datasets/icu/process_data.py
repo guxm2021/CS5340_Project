@@ -61,7 +61,8 @@ def bucketTimeseries(columns, ts, interval):
   tscolumns = ts.columns
   data = initialiseEmptyDataDict(columns, 48*60, interval)
   for idx in range(ts.shape[0]):
-    bucket = int(timeToMins(ts.iloc[idx].name) // interval)
+    # Max timestamp is 48:00 bucket to the last time-bucket
+    bucket = min(int(timeToMins(ts.iloc[idx].name) // interval), 47)
     for c in tscolumns:
       vals = ts.iloc[idx][c]
       if c not in data:

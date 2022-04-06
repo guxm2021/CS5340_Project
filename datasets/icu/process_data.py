@@ -38,7 +38,9 @@ aggFuncs = {
   'TroponinT': np.mean,
   'Urine': sum,
   'WBC': np.mean,
-  'Weight': np.mean
+  'Weight': np.mean,
+  'ICUType': lambda x : x[-1],
+  'Gender': lambda x : x[0]
 }
 
 

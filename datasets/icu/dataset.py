@@ -4,7 +4,7 @@ import pandas as pd
 import os
 
 from reader import readPatientData
-from process_data import timeToMins, aggFuncs
+from process_data import timeToMins, cleanTimeseriesData, bucketTimeseries, normaliseData, aggFuncs
 
 columnIndexes = {
   'Albumin': 0,
@@ -43,7 +43,7 @@ columnIndexes = {
   'TroponinT': 33,
   'Urine': 34,
   'WBC': 35,
-  'Weight': 36 
+  'Weight': 36
 }
 
 #  The according to a study, the columns that matter are - 
@@ -55,15 +55,16 @@ subsetColumnIndexes = {
   'HCT': 3,
   'Na': 4,
   'Urine': 5,
-  'MechVent': 6
+  'MechVent': 6,
+  'ICUType': 7,
+  'Gender': 8
 }
 
-def transformTimeSeries(ts, columnIndexes):
+def transformTimeSeries(ts, columnIndexes, timestamps):
   x = np.zeros((len(columnIndexes), ts.shape[0]))
   masking = np.zeros((len(columnIndexes), ts.shape[0]))
   deltaT = np.zeros((len(columnIndexes), ts.shape[0]))
   tscolumns = ts.columns
-  timestamps = list(map(timeToMins , ts.index.to_list()))
   for t, values in ts.iterrows():
     tIdx = ts.index.get_loc(t)
     for c in tscolumns:
@@ -83,20 +84,58 @@ def transformTimeSeries(ts, columnIndexes):
   return x, masking, deltaT
 
 class Dataset(td.Dataset):
-    def __init__(self, inputs_dir, outcomes_file, columnIndexes=subsetColumnIndexes):
-        self.columnIndexes = columnIndexes
-        self.outcomes = pd.read_csv(outcomes_file)
-        self.dir = inputs_dir
-        self.files = os.listdir(inputs_dir)
-        self.files.sort()
+  def __init__(self, inputs_dir, outcomes_file, columnIndexes=subsetColumnIndexes):
+      self.columnIndexes = columnIndexes
+      self.outcomes = pd.read_csv(outcomes_file)
+      self.dir = inputs_dir
+      self.files = os.listdir(inputs_dir)
+      self.files.sort()
 
-    def __len__(self):
-        return len(self.files)
+  def __len__(self):
+      return len(self.files)
 
-    def __getitem__(self, index):
-      descriptors, ts = readPatientData(os.path.join(self.dir, self.files[index]))
-      recId = descriptors['RecordID']
-      outcome = self.outcomes[self.outcomes['RecordID'] == recId]
-      y = outcome['In-hospital_death'].iloc[0]
-      x, masking, deltaT = transformTimeSeries(ts, self.columnIndexes)
-      return descriptors, x, masking, deltaT, y
+  def getOutcomes(self, recId):
+    return self.outcomes[self.outcomes['RecordID'] == recId]
+
+  def getData(self, index):
+    return readPatientData(os.path.join(self.dir, self.files[index]))
+
+  def __getitem__(self, index):
+    descriptors, ts = self.getData(index)
+    recId = descriptors['RecordID']
+    y = self.getOutcomes(recId)['In-hospital_death'].iloc[0]
+    timestamps = list(map(timeToMins , ts.index.to_list()))
+    x, masking, deltaT = transformTimeSeries(ts, self.columnIndexes, timestamps)
+    return descriptors, x, masking, deltaT, y
+
+class ProcessedDataSet(Dataset):
+  def __init__(self, inputs_dir, outcomes_file, columnIndexes, referenceValues):
+    super().__init__(inputs_dir, outcomes_file, columnIndexes)
+    self.referenceValues = referenceValues
+
+  def impute_data(self, x, masking):
+    final_x = np.zeros((x.shape[0], x.shape[1]))
+    averages = np.multiply(x, masking).sum(axis=1) / np.maximum(masking.sum(axis = 1), 1) # ensure no division by 0
+    lastSeenIndex = np.full((x.shape[0],), -1)
+    for c in range(x.shape[0]):
+      for t in range(x.shape[1]):
+        if masking[c][t] == 1:
+          final_x[c][t] = x[c][t]
+          lastSeenIndex[c] = t
+        elif lastSeenIndex[c] != -1:
+          final_x[c][t] = final_x[c][lastSeenIndex[c]]
+        else:
+          final_x[c][t] = averages[c]
+    return final_x
+
+  def __getitem__(self, index):
+    descriptors, ts = self.getData(index)
+    recId = descriptors['RecordID']
+    y = self.getOutcomes(recId)['In-hospital_death'].iloc[0]
+   
+    ts = cleanTimeseriesData(ts, self.referenceValues)
+    ts = normaliseData(bucketTimeseries(self.columnIndexes.keys(), ts, 60), self.referenceValues)
+    timestamps = np.arange(0, 48, 1, dtype=int)
+    x, masking, _ = transformTimeSeries(ts, self.columnIndexes, timestamps)
+    final_x = self.impute_data(x, masking)
+    return final_x, y

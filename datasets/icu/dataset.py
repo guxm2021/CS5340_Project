@@ -112,6 +112,7 @@ class ProcessedDataSet(Dataset):
   def __init__(self, inputsDir, outcomesPath, columnIndexes, reference_values):
     super().__init__(inputsDir, outcomesPath, columnIndexes)
     self.referenceValues = reference_values
+    self.cache = {}
 
   def imputeData(self, x, masking):
     final_x = np.zeros((x.shape[0], x.shape[1]))
@@ -129,6 +130,10 @@ class ProcessedDataSet(Dataset):
     return final_x
 
   def __getitem__(self, index):
+    if index in self.cache:
+      x, y = self.cache[index]
+      return x, y
+    
     descriptors, ts = self.getData(index)
     y = self.getOutcomes(descriptors['RecordID'])['In-hospital_death'].iloc[0]
 
@@ -136,4 +141,6 @@ class ProcessedDataSet(Dataset):
     ts = normaliseData(bucketTimeseries(self.columnIndexes.keys(), ts, 60), self.referenceValues)
     timestamps = np.arange(0, 48, 1, dtype=int)
     x, masking, _ = transformTimeSeries(ts, self.columnIndexes, timestamps)
-    return torch.from_numpy(self.imputeData(x, masking)), y
+    x = torch.from_numpy(self.imputeData(x, masking))
+    self.cache[index] = (x, y)
+    return x, y

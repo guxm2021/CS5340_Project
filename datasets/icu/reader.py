@@ -14,7 +14,7 @@ def readPatientData(path):
     'ICUType': desc[desc['Parameter']=='ICUType'].values[0,2],
     'Weight': desc[desc['Parameter']=='ICUType'].values[0,2],
   }
-  timeseries = data.pivot_table(index='Time',columns='Parameter', values='Value', aggfunc=np.array)
+  timeseries = data.pivot_table(index='Time',columns='Parameter', values='Value', aggfunc=max)
   return descriptors, timeseries
 
 def loadReferenceValues(path=None):

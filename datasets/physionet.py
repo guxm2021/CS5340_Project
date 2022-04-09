@@ -19,7 +19,11 @@ import torch
 from torch.utils.data import DataLoader
 from torchvision.datasets.utils import download_url
 from tools.utils import get_device
+<<<<<<< HEAD
+from tqdm import tqdm
+=======
 
+>>>>>>> 65ae4d8573e29a50c37683f475b4abc4778d5049
 # Adapted from: https://github.com/rtqichen/time-series-datasets
 
 # get minimum and maximum for each feature across the whole dataset
@@ -148,7 +152,11 @@ class PhysioNet(object):
 			dirname = os.path.join(self.raw_folder, filename.split('.')[0])
 			patients = []
 			total = 0
+<<<<<<< HEAD
+			for txtfile in tqdm(os.listdir(dirname)):
+=======
 			for txtfile in os.listdir(dirname):
+>>>>>>> 65ae4d8573e29a50c37683f475b4abc4778d5049
 				record_id = txtfile.split('.')[0]
 				with open(os.path.join(dirname, txtfile)) as f:
 					lines = f.readlines()
@@ -350,6 +358,8 @@ def variable_time_collate_fn(batch, args, device = torch.device("cpu"), data_typ
 
 	data_dict = utils.split_and_subsample_batch(data_dict, args, data_type = data_type)
 	return data_dict
+<<<<<<< HEAD
+=======
 
 if __name__ == '__main__':
 	torch.manual_seed(1991)
@@ -357,3 +367,4 @@ if __name__ == '__main__':
 	dataset = PhysioNet('data/physionet', train=False, download=True)
 	dataloader = DataLoader(dataset, batch_size=10, shuffle=True, collate_fn=variable_time_collate_fn)
 	print(dataloader.__iter__().next())
+>>>>>>> 65ae4d8573e29a50c37683f475b4abc4778d5049

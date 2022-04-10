@@ -3,43 +3,55 @@ import torch.nn as nn
 
 
 class GRUmodel(nn.Module):
-    def __init__(self, num_layers, input_size=20, hidden_size=1024, output_size=1):
+    def __init__(self, opt):
         super(GRUmodel, self).__init__()
-        self.input_size = input_size
-        self.hidden_size = hidden_size
-        self.num_layers = num_layers
-        self.rnn = nn.GRU(input_size=input_size, hidden_size=hidden_size, num_layers=num_layers, bidirectional=False)
+        # define the hyper-parameters for model architecture
+        self.input_size = opt.input_size
+        self.hidden_size = opt.hidden_size
+        self.num_layers = opt.num_layers
+        self.output_size = opt.output_size
+        
+        # define the model architecture
+        self.rnn = nn.GRU(input_size=self.input_size, hidden_size=self.hidden_size, 
+                          num_layers=self.num_layers, bidirectional=False)
         self.cls = nn.Sequential(
-            nn.Linear(hidden_size, hidden_size),
+            nn.Linear(self.hidden_size, self.hidden_size),
             nn.ReLU(inplace=True),
-            nn.Linear(hidden_size, output_size)
+            nn.Linear(self.hidden_size, self.output_size),
+            nn.Sigmoid(),
         )
 
-    def forward(self, x):
+    def forward(self, x, tp=None, mask=None):
         batch, frame, _ = x.size()
         # forward rnn
         x, hidden = self.rnn(x)
         # global pooling
-        x = torch.mean(x, dim=1)  # (B, T, F) -> (B, F)
+        x = x[:, -1] # torch.mean(x, dim=1)  # (B, T, F) -> (B, F)
         # forward classifier
-        y = self.cls(x)
+        y = self.cls(x)  # prob
         return y
 
 
 class LSTMmodel(nn.Module):
-    def __init__(self, num_layers, input_size=20, hidden_size=1024, output_size=1):
+    def __init__(self, opt):
         super(LSTMmodel, self).__init__()
-        self.input_size = input_size
-        self.hidden_size = hidden_size
-        self.num_layers = num_layers
-        self.rnn = nn.LSTM(input_size=input_size, hidden_size=hidden_size, num_layers=num_layers, bidirectional=False)
+        # define the hyper-parameters for model architecture
+        self.input_size = opt.input_size
+        self.hidden_size = opt.hidden_size
+        self.num_layers = opt.num_layers
+        self.output_size = opt.output_size
+        
+        # define the model architecture
+        self.rnn = nn.LSTM(input_size=self.input_size, hidden_size=self.hidden_size, 
+                          num_layers=self.num_layers, bidirectional=False)
         self.cls = nn.Sequential(
-            nn.Linear(hidden_size, hidden_size),
+            nn.Linear(self.hidden_size, self.hidden_size),
             nn.ReLU(inplace=True),
-            nn.Linear(hidden_size, output_size)
+            nn.Linear(self.hidden_size, self.output_size),
+            nn.Sigmoid(),
         )
 
-    def forward(self, x):
+    def forward(self, x, tp=None, mask=None):
         batch, frame, _ = x.size()
         # forward rnn
         x, hidden = self.rnn(x)
@@ -51,25 +63,30 @@ class LSTMmodel(nn.Module):
 
 
 class probGRU(nn.Module):
-    def __init__(self, n_sghmc, num_layers, input_size=20, hidden_size=1024, output_size=1):
+    def __init__(self, opt):
         super(probGRU, self).__init__()
-        self.input_size = input_size
-        self.hidden_size = hidden_size
-        self.num_layers = num_layers
-        self.n_sghmc = n_sghmc
-        self.rnn = nn.GRU(input_size=input_size, hidden_size=hidden_size, num_layers=num_layers, bidirectional=False)
+        # define the hyper-parameters for model architecture
+        self.input_size = opt.input_size
+        self.hidden_size = opt.hidden_size
+        self.num_layers = opt.num_layers
+        self.n_sghmc = opt.n_sghmc
+        self.output_size = opt.output_size
+        # define the model architecture
+        self.rnn = nn.GRU(input_size=self.input_size, hidden_size=self.hidden_size, 
+                          num_layers=self.num_layers, bidirectional=False)
         self.cls_samples = []
         for i in range(n_sghmc):
             cls = nn.Sequential(
-                  nn.Linear(hidden_size, hidden_size),
+                  nn.Linear(self.hidden_size, self.hidden_size),
                   nn.ReLU(inplace=True),
-                  nn.Linear(hidden_size, output_size)
+                  nn.Linear(self.hidden_size, self.output_size),
+                  nn.Sigmoid(),
                   )
             setattr(self, 'cls_{}'.format(i), cls)
             self.cls_samples.append(cls)
 
 
-    def forward(self, x):
+    def forward(self, x, tp=None, mask=None):
         batch, frame, _ = x.size()
         # forward rnn
         x, hidden = self.rnn(x)
@@ -85,25 +102,30 @@ class probGRU(nn.Module):
 
 
 class probLSTM(nn.Module):
-    def __init__(self, n_sghmc, num_layers, input_size=20, hidden_size=1024, output_size=1):
+    def __init__(self, opt):
         super(probLSTM, self).__init__()
-        self.input_size = input_size
-        self.hidden_size = hidden_size
-        self.num_layers = num_layers
-        self.n_sghmc = n_sghmc
-        self.rnn = nn.LSTM(input_size=input_size, hidden_size=hidden_size, num_layers=num_layers, bidirectional=False)
+        # define the hyper-parameters for model architecture
+        self.input_size = opt.input_size
+        self.hidden_size = opt.hidden_size
+        self.num_layers = opt.num_layers
+        self.n_sghmc = opt.n_sghmc
+        self.output_size = opt.output_size
+        # define the model architecture
+        self.rnn = nn.LSTM(input_size=self.input_size, hidden_size=self.hidden_size, 
+                           num_layers=self.num_layers, bidirectional=False)
         self.cls_samples = []
         for i in range(n_sghmc):
             cls = nn.Sequential(
-                  nn.Linear(hidden_size, hidden_size),
+                  nn.Linear(self.hidden_size, self.hidden_size),
                   nn.ReLU(inplace=True),
-                  nn.Linear(hidden_size, output_size)
+                  nn.Linear(self.hidden_size, self.output_size),
+                  nn.Sigmoid(),
                   )
             setattr(self, 'cls_{}'.format(i), cls)
             self.cls_samples.append(cls)
 
 
-    def forward(self, x):
+    def forward(self, x, tp=None, mask=None):
         batch, frame, _ = x.size()
         # forward rnn
         x, hidden = self.rnn(x)

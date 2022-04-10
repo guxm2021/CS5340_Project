@@ -1,7 +1,5 @@
 # CS5340_Project
-Group Project for Class CS5340 
-
-Notice: train.py / test.py / run.py are still in working
+Group Project for Class CS5340
 
 ## config
 opt_dict.py: define the config
@@ -37,5 +35,5 @@ save for training log and saved model files
 
 ## train and evaluate
 ```
-python run.py --overrides
+python run.py --gpu 0 --model GRUmodel --lr 1e-3
 ```

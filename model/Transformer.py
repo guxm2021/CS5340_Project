@@ -240,10 +240,11 @@ class Transformermodel(nn.Module):
         self.cls = nn.Sequential(
             nn.Linear(hidden_size, hidden_size),
             nn.ReLU(inplace=True),
-            nn.Linear(hidden_size, output_size)
+            nn.Linear(hidden_size, output_size),
+            nn.Sigmoid(),
         )
 
-    def forward(self, x):
+    def forward(self, x, tp=None, mask=None):
         batch, frame, _ = x.size()
         # forward transformer
         x = self.proj(x)
@@ -272,13 +273,14 @@ class probTransformer(nn.Module):
             cls = nn.Sequential(
                   nn.Linear(hidden_size, hidden_size),
                   nn.ReLU(inplace=True),
-                  nn.Linear(hidden_size, output_size)
+                  nn.Linear(hidden_size, output_size),
+                  nn.Sigmoid(),
                   )
             setattr(self, 'cls_{}'.format(i), cls)
             self.cls_samples.append(cls)
 
 
-    def forward(self, x):
+    def forward(self, x, tp=None, mask=None):
         batch, frame, _ = x.size()
         # forward transformer
         x = self.proj(x)

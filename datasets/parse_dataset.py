@@ -27,13 +27,13 @@ def get_dataset(opt):
     train_dataloader = DataLoader(train_data, batch_size= batch_size, shuffle=False, 
                                   collate_fn= lambda batch: variable_time_collate_fn(batch, opt, opt.device, data_type = "train",
 				                  data_min = data_min, data_max = data_max))
-    test_dataloader = DataLoader(test_data, batch_size = n_samples, shuffle=False, 
+    test_dataloader = DataLoader(test_data, batch_size = batch_size, shuffle=False, 
 			                     collate_fn= lambda batch: variable_time_collate_fn(batch, opt, opt.device, data_type = "test",
 			                 	 data_min = data_min, data_max = data_max))
     attr_names = train_dataset_obj.params
     data_objects = {"dataset_obj": train_dataset_obj, 
-					"train_dataloader": utils.inf_generator(train_dataloader), 
-					"test_dataloader": utils.inf_generator(test_dataloader),
+					"train_dataloader": train_dataloader, #utils.inf_generator(train_dataloader), 
+					"test_dataloader": test_dataloader, #utils.inf_generator(test_dataloader),
 					"input_dim": input_dim,
 					"n_train_batches": len(train_dataloader),
 					"n_test_batches": len(test_dataloader),

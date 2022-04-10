@@ -5,9 +5,10 @@ import random
 import argparse
 import numpy as np
 from tqdm import tqdm
+import torch.nn as nn
 from config.opt_dict import get_opt
 from model.pools import get_model
-from datasets.physionet import PhysioNet, DataLoader, variable_time_collate_fn
+from datasets.parse_dataset import get_dataset
 from tools.train import Trainer
 from tools.test import Tester
 
@@ -27,11 +28,9 @@ def main(args):
 	torch.backends.cudnn.benchmark = False
 
 	# load dataset and dataloader
-	train_dataset = PhysioNet('data', train=True, download=True)
-	test_dataset = PhysioNet('data', train=False, download=True)
-	train_loader = DataLoader(train_dataset, batch_size=10, shuffle=True, collate_fn=variable_time_collate_fn)
-	test_loader = DataLoader(test_dataset, batch_size=10, shuffle=False, collate_fn=variable_time_collate_fn)
-	# print(dataloader.__iter__().next())
+	data_obj = get_dataset(opt) 
+	train_loader = data_obj['train_dataloader']
+	test_loader = data_obj['test_dataloader']
 
     # load model
 	modelClass = get_model(opt.model)
@@ -49,11 +48,12 @@ def main(args):
 		num_param += param.numel()
 	print(f"model {opt.model} parameters {round(num_param / 1e6, 2)} M")
     
-	# set optimizer
+	# set optimizer and criterion
 	optimizer = torch.optim.Adam(model.parameters(), lr=opt.lr, betas=(opt.beta, 0.999), weight_decay=opt.weight_decay)
+	criterion = nn.BCELoss()
 
 	# train
-	model = Trainer(model=model, dataloader=train_loader, optimizer=optimizer, opt=opt, skip=False)
+	model = Trainer(model=model, dataloader=train_loader, optimizer=optimizer, criterion=criterion, opt=opt, skip=args.skip)
 
 	# load the best model
 	print('load model from {}'.format(opt.model_path))
@@ -66,9 +66,10 @@ def main(args):
 if __name__ == '__main__':
 	# define argparse
 	parser = argparse.ArgumentParser()
-	parser.add_argument("--model", type=str, default="SO_RNN", help="the name of model")
-	parser.add_argument("--gpu", type=int, default=0, help="the num of gpu, chosen from [0, 1, 2, 3]")
+	parser.add_argument("--model", type=str, default="GRUmodel", help="the name of model")
+	parser.add_argument("--gpu", type=int, default=3, help="the num of gpu, chosen from [0, 1, 2, 3]")
 	parser.add_argument("--lr", type=float, default=1e-3, help="learning rate")
+	parser.add_argument("--skip", action="store_true", help="skipping the training stage")
 	args = parser.parse_args()
     
 	# set gpu num

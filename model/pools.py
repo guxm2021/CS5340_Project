@@ -1,4 +1,4 @@
-from model.RNN import GRUmodel, LSTMmodel, probGRU, probLSTM
+from model.RNN import GRUmodal, LSTMmodel, probGRU, probLSTM
 from model.Transformer import Transformermodel, probTransformer
 
 

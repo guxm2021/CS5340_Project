@@ -53,7 +53,7 @@ def main(args):
 	optimizer = torch.optim.Adam(model.parameters(), lr=opt.lr, betas=(opt.beta, 0.999), weight_decay=opt.weight_decay)
 
 	# train
-	model = Trainer(model=model, dataloader=train_loader, optimizer=optimizer, opt=opt, skip=args.skip)
+	model = Trainer(model=model, dataloader=train_loader, optimizer=optimizer, opt=opt, skip=False)
 
 	# load the best model
 	print('load model from {}'.format(opt.model_path))
@@ -69,7 +69,6 @@ if __name__ == '__main__':
 	parser.add_argument("--model", type=str, default="SO_RNN", help="the name of model")
 	parser.add_argument("--gpu", type=int, default=0, help="the num of gpu, chosen from [0, 1, 2, 3]")
 	parser.add_argument("--lr", type=float, default=1e-3, help="learning rate")
-	parser.add_argument("--skip", action="store_true", help="skipping the training stage")
 	args = parser.parse_args()
     
 	# set gpu num

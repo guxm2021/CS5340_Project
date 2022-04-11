@@ -42,19 +42,23 @@ def get_opt(model='GRUmodel', lr=1e-3):
         opt.hidden_size = 64  # hidden dimension
         opt.num_layers = 2      # number of layers
     elif opt.model == 'TCNmodel':
-        opt.hidden_size = 64  # hidden dimension
+        opt.hidden_size = 128  # hidden dimension
         opt.num_layers = 2      # number of layers
         opt.kernel_size = 7     # kernel size 
     elif opt.model == 'probTCN':
         opt.hidden_size = 64  # hidden dimension
         opt.num_layers = 2      # number of layers
         opt.kernel_size = 7     # kernel size 
+    elif opt.model == 'ODERNNmodel':
+        opt.hidden_size = 64  # hidden dimension
+        opt.num_layers = 2      # number of layers
+        opt.n_step = 5          # steps for ode solver
     
     # hyper-parameters for training
     opt.lr = lr             # learning rate
     opt.weight_decay = 5e-4
     opt.beta = 0.9
-    opt.epochs = 5
+    opt.epochs = 20
     opt.batch_size = 50      # batch size
 
     # hyper-parameters for SGHMC sampling

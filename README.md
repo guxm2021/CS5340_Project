@@ -75,7 +75,7 @@ python run.py --gpu 0 --model ODERNNmodel --lr 1e-3
 ### Bayesian Models
 [Stochastic Gradient Hamiltonian Monte Carlo](https://proceedings.mlr.press/v32/cheni14.pdf) is implemented in `tools/sghmc.py`.
 
-![image](https://github.com/guxm2021/CS5340_Project/tree/main/assets/SGHMC.png)
+![image](https://github.com/guxm2021/CS5340_Project/blob/main/assets/SGHMC.png)
 
 * TCN
 ```

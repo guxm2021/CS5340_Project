@@ -34,6 +34,26 @@ files to implement model architectures
 save for training log and saved model files
 
 ## train and evaluate
+
+### Determinstic Models
+* GRU
 ```
 python run.py --gpu 0 --model GRUmodel --lr 1e-3
 ```
+
+* LSTM
+```
+python run.py --gpu 0 --model LSTMmodel --lr 1e-3
+```
+
+* TCN
+```
+python run.py --gpu 0 --model TCNmodel --lr 1e-3
+```
+
+* Transformer
+```
+python run.py --gpu 0 --model Transformermodel --lr 1e-3
+```
+
+Bayesian Models

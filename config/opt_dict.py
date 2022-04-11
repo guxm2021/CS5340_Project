@@ -4,7 +4,7 @@ import os
 def get_opt(model='GRUmodel', lr=1e-3):
     # set experiment configs
     opt = EasyDict()
-    # choose a model from ["GRUmodel", "LSTMmodel", "probGRU", "probLSTM", "Transformermodel", "probTransformer"]
+    # choose a model from ["GRUmodel", "LSTMmodel", "probGRU", "probLSTM", "Transformermodel", "probTransformer", "TCNmodel", "probTCN"]
     opt.model = model # 'ADDA_RNN'
     # choose run on which device ["cuda", "cpu"]
     opt.device = "cuda"
@@ -17,7 +17,6 @@ def get_opt(model='GRUmodel', lr=1e-3):
     opt.sample_tp = None     # Number of time points to sub-sample
     opt.cut_tp = None        # Cut out the section of the timeline of the specified length (in number of points)
     opt.n_samples = 8000     # size of the dataset
-    opt.batch_size = 50      # batch size
     
     # hyper-parameters for model architecture
     opt.input_size = 41     # dimension of input dim
@@ -42,12 +41,21 @@ def get_opt(model='GRUmodel', lr=1e-3):
     elif opt.model == 'probTransformer':
         opt.hidden_size = 64  # hidden dimension
         opt.num_layers = 2      # number of layers
+    elif opt.model == 'TCNmodel':
+        opt.hidden_size = 64  # hidden dimension
+        opt.num_layers = 2      # number of layers
+        opt.kernel_size = 7     # kernel size 
+    elif opt.model == 'probTCN':
+        opt.hidden_size = 64  # hidden dimension
+        opt.num_layers = 2      # number of layers
+        opt.kernel_size = 7     # kernel size 
     
     # hyper-parameters for training
     opt.lr = lr             # learning rate
     opt.weight_decay = 5e-4
     opt.beta = 0.9
-    opt.epochs = 20
+    opt.epochs = 5
+    opt.batch_size = 50      # batch size
 
     # hyper-parameters for SGHMC sampling
     opt.n_sghmc = 12         # number of SGHMC samples: 8
@@ -55,7 +63,7 @@ def get_opt(model='GRUmodel', lr=1e-3):
 
     # experiment folder
     opt.exp = 'SeqExp_' + opt.model
-    opt.outf = './dump/' + opt.exp + '_seed_' + str(opt.seed)
+    opt.outf = './dump/' + opt.exp + '_seed_' + str(opt.seed) + '_lr_' + str(opt.lr)
     opt.train_log = opt.outf + '/train.log'
     opt.model_path = opt.outf + '/model.pth'
 

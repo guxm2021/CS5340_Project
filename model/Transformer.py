@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 from typing import Optional
-from model.base import PositionalEncoding, LayerNorm, MultiheadAttention, PositionalwiseFeedForward
+from model.base import PositionalEncoding, LayerNorm, MultiheadAttention, PositionalwiseFeedForward, GAP1d
 
 
 class TransformerEncoderLayer(nn.Module):
@@ -227,20 +227,23 @@ class TransformerEncoder(nn.Module):
 
 
 class Transformermodel(nn.Module):
-    def __init__(self, num_layers, input_size=20, hidden_size=1024, output_size=1):
+    def __init__(self, opt):
         super(Transformermodel, self).__init__()
-        self.input_size = input_size
-        self.hidden_size = hidden_size
-        self.num_layers = num_layers
+        self.input_size = opt.input_size
+        self.hidden_size = opt.hidden_size
+        self.output_size = opt.output_size
+        self.num_layers = opt.num_layers
         self.proj = nn.Sequential(
-            nn.Linear(input_size, hidden_size),
+            nn.Linear(self.input_size, self.hidden_size),
             nn.ReLU(),
         )
-        self.encoder = TransformerEncoder(num_layers=num_layers, nhead=8, d_ffn=hidden_size, d_model=hidden_size)
+        self.encoder = TransformerEncoder(num_layers=self.num_layers, nhead=4, d_ffn=self.hidden_size, d_model=self.hidden_size)
+        self.positional_encoding = PositionalEncoding(input_size=self.hidden_size, max_len=5000)
+        self.gap = GAP1d()
         self.cls = nn.Sequential(
-            nn.Linear(hidden_size, hidden_size),
-            nn.ReLU(inplace=True),
-            nn.Linear(hidden_size, output_size),
+            # nn.Linear(hidden_size, hidden_size),
+            # nn.ReLU(inplace=True),
+            nn.Linear(self.hidden_size, self.output_size),
             nn.Sigmoid(),
         )
 
@@ -248,32 +251,38 @@ class Transformermodel(nn.Module):
         batch, frame, _ = x.size()
         # forward transformer
         x = self.proj(x)
-        x, hidden = self.encoder(x)
+        x = x + self.positional_encoding(x)
+        x, attn_lst = self.encoder(x)
         # global pooling
-        x = torch.mean(x, dim=1)  # (B, T, F) -> (B, F)
+        # x = torch.mean(x, dim=1)  # (B, T, F) -> (B, F)
+        x = x.transpose(1, 2).contiguous()
+        x = self.gap(x)                   # (B, T, F) -> (B, F)
         # forward classifier
         y = self.cls(x)
         return y
 
 
 class probTransformer(nn.Module):
-    def __init__(self, n_sghmc, num_layers, input_size=20, hidden_size=1024, output_size=1):
+    def __init__(self, opt):
         super(probTransformer, self).__init__()
-        self.input_size = input_size
-        self.hidden_size = hidden_size
-        self.num_layers = num_layers
-        self.n_sghmc = n_sghmc
+        self.input_size = opt.input_size
+        self.hidden_size = opt.hidden_size
+        self.output_size = opt.output_size
+        self.num_layers = opt.num_layers
+        self.n_sghmc = opt.n_sghmc
         self.proj = nn.Sequential(
-            nn.Linear(input_size, hidden_size),
+            nn.Linear(self.input_size, self.hidden_size),
             nn.ReLU(),
         )
-        self.encoder = TransformerEncoder(num_layers=num_layers, nhead=8, d_ffn=hidden_size, d_model=hidden_size)
+        self.encoder = TransformerEncoder(num_layers=self.num_layers, nhead=8, d_ffn=self.hidden_size, d_model=self.hidden_size)
+        self.positional_encoding = PositionalEncoding(input_size=self.hidden_size, max_len=5000)
+        self.gap = GAP1d()
         self.cls_samples = []
-        for i in range(n_sghmc):
+        for i in range(opt.n_sghmc):
             cls = nn.Sequential(
-                  nn.Linear(hidden_size, hidden_size),
-                  nn.ReLU(inplace=True),
-                  nn.Linear(hidden_size, output_size),
+                #   nn.Linear(self.hidden_size, self.hidden_size),
+                #   nn.ReLU(inplace=True),
+                  nn.Linear(self.hidden_size, self.output_size),
                   nn.Sigmoid(),
                   )
             setattr(self, 'cls_{}'.format(i), cls)
@@ -284,9 +293,12 @@ class probTransformer(nn.Module):
         batch, frame, _ = x.size()
         # forward transformer
         x = self.proj(x)
-        x, hidden = self.encoder(x)
+        x = x + self.positional_encoding(x)
+        x, attn_lst = self.encoder(x)
         # global pooling
-        x = torch.mean(x, dim=1)  # (B, T, F) -> (B, F)
+        # x = torch.mean(x, dim=1)  # (B, T, F) -> (B, F)
+        x = x.transpose(1, 2).contiguous()
+        x = self.gap(x)                   # (B, T, F) -> (B, F)
         # forward classifier
         y = []
         sp_size = (batch - 1) // len(self.cls_samples) + 1

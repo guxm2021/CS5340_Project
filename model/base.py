@@ -4,6 +4,7 @@ import torch.nn as nn
 from typing import Optional
 
 
+# utility classes for Transformer
 class PositionalEncoding(nn.Module):
     """This class implements the absolute sinusoidal positional encoding function.
 
@@ -302,3 +303,27 @@ class PositionalwiseFeedForward(nn.Module):
         x = x.permute(1, 0, 2)
 
         return x
+
+
+# utility classes for TCN
+class Flatten(nn.Module):
+    def forward(self, x): return x.view(x.size(0), -1)
+
+
+class GAP1d(nn.Module):
+    # Global Adaptive Pooling + Flatten
+    def __init__(self, output_size=1):
+        super(GAP1d, self).__init__()
+        self.gap = nn.AdaptiveAvgPool1d(output_size)
+        self.flatten = Flatten()
+    def forward(self, x):
+        return self.flatten(self.gap(x))
+
+
+class Chomp1d(nn.Module):
+    def __init__(self, chomp_size):
+        super(Chomp1d, self).__init__()
+        self.chomp_size = chomp_size
+
+    def forward(self, x):
+        return x[:, :, :-self.chomp_size].contiguous()

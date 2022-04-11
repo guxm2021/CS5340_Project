@@ -1,5 +1,6 @@
-from model.RNN import GRUmodal, LSTMmodel, probGRU, probLSTM
+from model.RNN import GRUmodel, LSTMmodel, probGRU, probLSTM
 from model.Transformer import Transformermodel, probTransformer
+from model.TCN import TCNmodel, probTCN
 
 
 def get_model(model):
@@ -10,5 +11,7 @@ def get_model(model):
         'probLSTM': probLSTM,
         'Transformermodel': Transformermodel,
         'probTransformer': probTransformer,
+        'TCNmodel': TCNmodel,
+        'probTCN': probTCN,
     }
     return model_pool[model]

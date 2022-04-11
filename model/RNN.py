@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+from model.base import GAP1d
 
 
 class GRUmodel(nn.Module):
@@ -13,10 +14,11 @@ class GRUmodel(nn.Module):
         
         # define the model architecture
         self.rnn = nn.GRU(input_size=self.input_size, hidden_size=self.hidden_size, 
-                          num_layers=self.num_layers, bidirectional=False)
+                          num_layers=self.num_layers, batch_first=True, bidirectional=False)
+        self.gap = GAP1d()
         self.cls = nn.Sequential(
-            nn.Linear(self.hidden_size, self.hidden_size),
-            nn.ReLU(inplace=True),
+            # nn.Linear(self.hidden_size, self.hidden_size),
+            # nn.ReLU(inplace=True),
             nn.Linear(self.hidden_size, self.output_size),
             nn.Sigmoid(),
         )
@@ -26,7 +28,9 @@ class GRUmodel(nn.Module):
         # forward rnn
         x, hidden = self.rnn(x)
         # global pooling
-        x = x[:, -1] # torch.mean(x, dim=1)  # (B, T, F) -> (B, F)
+        # x = torch.mean(x, dim=1)  # (B, T, F) -> (B, F)
+        x = x.transpose(1, 2).contiguous()
+        x = self.gap(x)                   # (B, T, F) -> (B, F)
         # forward classifier
         y = self.cls(x)  # prob
         return y
@@ -43,10 +47,11 @@ class LSTMmodel(nn.Module):
         
         # define the model architecture
         self.rnn = nn.LSTM(input_size=self.input_size, hidden_size=self.hidden_size, 
-                          num_layers=self.num_layers, bidirectional=False)
+                          num_layers=self.num_layers, batch_first=True, bidirectional=False)
+        self.gap = GAP1d()
         self.cls = nn.Sequential(
-            nn.Linear(self.hidden_size, self.hidden_size),
-            nn.ReLU(inplace=True),
+            # nn.Linear(self.hidden_size, self.hidden_size),
+            # nn.ReLU(inplace=True),
             nn.Linear(self.hidden_size, self.output_size),
             nn.Sigmoid(),
         )
@@ -56,7 +61,9 @@ class LSTMmodel(nn.Module):
         # forward rnn
         x, hidden = self.rnn(x)
         # global pooling
-        x = torch.mean(x, dim=1)  # (B, T, F) -> (B, F)
+        # x = torch.mean(x, dim=1)  # (B, T, F) -> (B, F)
+        x = x.transpose(1, 2).contiguous()
+        x = self.gap(x)                   # (B, T, F) -> (B, F)
         # forward classifier
         y = self.cls(x)
         return y
@@ -73,12 +80,13 @@ class probGRU(nn.Module):
         self.output_size = opt.output_size
         # define the model architecture
         self.rnn = nn.GRU(input_size=self.input_size, hidden_size=self.hidden_size, 
-                          num_layers=self.num_layers, bidirectional=False)
+                          num_layers=self.num_layers, batch_first=True, bidirectional=False)
+        self.gap = GAP1d()
         self.cls_samples = []
-        for i in range(n_sghmc):
+        for i in range(opt.n_sghmc):
             cls = nn.Sequential(
-                  nn.Linear(self.hidden_size, self.hidden_size),
-                  nn.ReLU(inplace=True),
+                #   nn.Linear(self.hidden_size, self.hidden_size),
+                #   nn.ReLU(inplace=True),
                   nn.Linear(self.hidden_size, self.output_size),
                   nn.Sigmoid(),
                   )
@@ -91,7 +99,9 @@ class probGRU(nn.Module):
         # forward rnn
         x, hidden = self.rnn(x)
         # global pooling
-        x = torch.mean(x, dim=1)  # (B, T, F) -> (B, F)
+        # x = torch.mean(x, dim=1)  # (B, T, F) -> (B, F)
+        x = x.transpose(1, 2).contiguous()
+        x = self.gap(x)                   # (B, T, F) -> (B, F)
         # forward classifier
         y = []
         sp_size = (batch - 1) // len(self.cls_samples) + 1
@@ -112,12 +122,13 @@ class probLSTM(nn.Module):
         self.output_size = opt.output_size
         # define the model architecture
         self.rnn = nn.LSTM(input_size=self.input_size, hidden_size=self.hidden_size, 
-                           num_layers=self.num_layers, bidirectional=False)
+                           num_layers=self.num_layers, batch_first=True, bidirectional=False)
+        self.gap = GAP1d()
         self.cls_samples = []
-        for i in range(n_sghmc):
+        for i in range(opt.n_sghmc):
             cls = nn.Sequential(
-                  nn.Linear(self.hidden_size, self.hidden_size),
-                  nn.ReLU(inplace=True),
+                #   nn.Linear(self.hidden_size, self.hidden_size),
+                #   nn.ReLU(inplace=True),
                   nn.Linear(self.hidden_size, self.output_size),
                   nn.Sigmoid(),
                   )
@@ -130,7 +141,9 @@ class probLSTM(nn.Module):
         # forward rnn
         x, hidden = self.rnn(x)
         # global pooling
-        x = torch.mean(x, dim=1)  # (B, T, F) -> (B, F)
+        # x = torch.mean(x, dim=1)  # (B, T, F) -> (B, F)
+        x = x.transpose(1, 2).contiguous()
+        x = self.gap(x)                   # (B, T, F) -> (B, F)
         # forward classifier
         y = []
         sp_size = (batch - 1) // len(self.cls_samples) + 1

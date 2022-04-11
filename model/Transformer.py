@@ -229,7 +229,14 @@ class TransformerEncoder(nn.Module):
 class Transformermodel(nn.Module):
     def __init__(self, opt):
         super(Transformermodel, self).__init__()
-        self.input_size = opt.input_size
+        self.cat_mask = opt.cat_mask
+        self.cat_tp = opt.cat_tp
+        if self.cat_mask:
+            self.input_size = opt.input_size * 2
+        else:
+            self.input_size = opt.input_size
+        if self.cat_tp:
+            self.input_size = self.input_size + 1
         self.hidden_size = opt.hidden_size
         self.output_size = opt.output_size
         self.num_layers = opt.num_layers
@@ -249,6 +256,10 @@ class Transformermodel(nn.Module):
 
     def forward(self, x, tp=None, mask=None):
         batch, frame, _ = x.size()
+        if self.cat_mask:
+            x = torch.cat([x, mask], dim=-1)
+        if self.cat_tp:
+            x = torch.cat([x, tp], dim=-1)
         # forward transformer
         x = self.proj(x)
         x = x + self.positional_encoding(x)
@@ -265,7 +276,14 @@ class Transformermodel(nn.Module):
 class probTransformer(nn.Module):
     def __init__(self, opt):
         super(probTransformer, self).__init__()
-        self.input_size = opt.input_size
+        self.cat_mask = opt.cat_mask
+        self.cat_tp = opt.cat_tp
+        if self.cat_mask:
+            self.input_size = opt.input_size * 2
+        else:
+            self.input_size = opt.input_size
+        if self.cat_tp:
+            self.input_size = self.input_size + 1
         self.hidden_size = opt.hidden_size
         self.output_size = opt.output_size
         self.num_layers = opt.num_layers
@@ -291,6 +309,10 @@ class probTransformer(nn.Module):
 
     def forward(self, x, tp=None, mask=None):
         batch, frame, _ = x.size()
+        if self.cat_mask:
+            x = torch.cat([x, mask], dim=-1)
+        if self.cat_tp:
+            x = torch.cat([x, tp], dim=-1)
         # forward transformer
         x = self.proj(x)
         x = x + self.positional_encoding(x)

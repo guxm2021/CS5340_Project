@@ -6,7 +6,14 @@ class ODERNNmodel(nn.Module):
     def __init__(self, opt):
         super(ODERNNmodel, self).__init__()
         # define the hyper-parameters for model architecture
-        self.input_size = opt.input_size
+        self.cat_mask = opt.cat_mask
+        self.cat_tp = opt.cat_tp
+        if self.cat_mask:
+            self.input_size = opt.input_size * 2
+        else:
+            self.input_size = opt.input_size
+        if self.cat_tp:
+            self.input_size = self.input_size + 1
         self.hidden_size = opt.hidden_size
         self.num_layers = opt.num_layers
         self.output_size = opt.output_size
@@ -68,7 +75,14 @@ class probODERNN(nn.Module):
     def __init__(self, opt):
         super(probODERNN, self).__init__()
         # define the hyper-parameters for model architecture
-        self.input_size = opt.input_size
+        self.cat_mask = opt.cat_mask
+        self.cat_tp = opt.cat_tp
+        if self.cat_mask:
+            self.input_size = opt.input_size * 2
+        else:
+            self.input_size = opt.input_size
+        if self.cat_tp:
+            self.input_size = self.input_size + 1
         self.hidden_size = opt.hidden_size
         self.num_layers = opt.num_layers
         self.output_size = opt.output_size

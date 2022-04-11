@@ -21,6 +21,8 @@ def get_opt(model='GRUmodel', lr=1e-3):
     # hyper-parameters for model architecture
     opt.input_size = 41     # dimension of input dim
     opt.output_size = 1     # dimension of output dim
+    opt.cat_mask = False    # whether to use mask
+    opt.cat_tp = False      # whether to use time points
     
     # hyper-parameters for specific model
     if opt.model == 'GRUmodel':

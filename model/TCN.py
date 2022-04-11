@@ -85,7 +85,14 @@ class TCNmodel(nn.Module):
     def __init__(self, opt):
         super(TCNmodel, self).__init__()
         # define the hyper-parameters for model architecture
-        self.input_size = opt.input_size
+        self.cat_mask = opt.cat_mask
+        self.cat_tp = opt.cat_tp
+        if self.cat_mask:
+            self.input_size = opt.input_size * 2
+        else:
+            self.input_size = opt.input_size
+        if self.cat_tp:
+            self.input_size = self.input_size + 1
         self.hidden_size = opt.hidden_size
         self.num_layers = opt.num_layers
         self.output_size = opt.output_size
@@ -103,6 +110,10 @@ class TCNmodel(nn.Module):
 
     def forward(self, x, tp=None, mask=None):
         batch, frame, _ = x.size()
+        if self.cat_mask:
+            x = torch.cat([x, mask], dim=-1)
+        if self.cat_tp:
+            x = torch.cat([x, tp], dim=-1)
         # forward tcn
         x = x.transpose(1, 2).contiguous()
         x = self.tcn(x)
@@ -118,7 +129,14 @@ class probTCN(nn.Module):
     def __init__(self, opt):
         super(probTCN, self).__init__()
         # define the hyper-parameters for model architecture
-        self.input_size = opt.input_size
+        self.cat_mask = opt.cat_mask
+        self.cat_tp = opt.cat_tp
+        if self.cat_mask:
+            self.input_size = opt.input_size * 2
+        else:
+            self.input_size = opt.input_size
+        if self.cat_tp:
+            self.input_size = self.input_size + 1
         self.hidden_size = opt.hidden_size
         self.num_layers = opt.num_layers
         self.n_sghmc = opt.n_sghmc
@@ -140,6 +158,10 @@ class probTCN(nn.Module):
 
     def forward(self, x, tp=None, mask=None):
         batch, frame, _ = x.size()
+        if self.cat_mask:
+            x = torch.cat([x, mask], dim=-1)
+        if self.cat_tp:
+            x = torch.cat([x, tp], dim=-1)
         # forward tcn
         x = x.transpose(1, 2).contiguous()
         x = self.tcn(x)

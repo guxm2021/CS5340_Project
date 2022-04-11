@@ -7,7 +7,14 @@ class GRUmodel(nn.Module):
     def __init__(self, opt):
         super(GRUmodel, self).__init__()
         # define the hyper-parameters for model architecture
-        self.input_size = opt.input_size
+        self.cat_mask = opt.cat_mask
+        self.cat_tp = opt.cat_tp
+        if self.cat_mask:
+            self.input_size = opt.input_size * 2
+        else:
+            self.input_size = opt.input_size
+        if self.cat_tp:
+            self.input_size = self.input_size + 1
         self.hidden_size = opt.hidden_size
         self.num_layers = opt.num_layers
         self.output_size = opt.output_size
@@ -25,6 +32,10 @@ class GRUmodel(nn.Module):
 
     def forward(self, x, tp=None, mask=None):
         batch, frame, _ = x.size()
+        if self.cat_mask:
+            x = torch.cat([x, mask], dim=-1)
+        if self.cat_tp:
+            x = torch.cat([x, tp], dim=-1)
         # forward rnn
         x, hidden = self.rnn(x)
         # global pooling
@@ -40,7 +51,14 @@ class LSTMmodel(nn.Module):
     def __init__(self, opt):
         super(LSTMmodel, self).__init__()
         # define the hyper-parameters for model architecture
-        self.input_size = opt.input_size
+        self.cat_mask = opt.cat_mask
+        self.cat_tp = opt.cat_tp
+        if self.cat_mask:
+            self.input_size = opt.input_size * 2
+        else:
+            self.input_size = opt.input_size
+        if self.cat_tp:
+            self.input_size = self.input_size + 1
         self.hidden_size = opt.hidden_size
         self.num_layers = opt.num_layers
         self.output_size = opt.output_size
@@ -58,6 +76,10 @@ class LSTMmodel(nn.Module):
 
     def forward(self, x, tp=None, mask=None):
         batch, frame, _ = x.size()
+        if self.cat_mask:
+            x = torch.cat([x, mask], dim=-1)
+        if self.cat_tp:
+            x = torch.cat([x, tp], dim=-1)
         # forward rnn
         x, hidden = self.rnn(x)
         # global pooling
@@ -73,7 +95,14 @@ class probGRU(nn.Module):
     def __init__(self, opt):
         super(probGRU, self).__init__()
         # define the hyper-parameters for model architecture
-        self.input_size = opt.input_size
+        self.cat_mask = opt.cat_mask
+        self.cat_tp = opt.cat_tp
+        if self.cat_mask:
+            self.input_size = opt.input_size * 2
+        else:
+            self.input_size = opt.input_size
+        if self.cat_tp:
+            self.input_size = self.input_size + 1
         self.hidden_size = opt.hidden_size
         self.num_layers = opt.num_layers
         self.n_sghmc = opt.n_sghmc
@@ -96,6 +125,10 @@ class probGRU(nn.Module):
 
     def forward(self, x, tp=None, mask=None):
         batch, frame, _ = x.size()
+        if self.cat_mask:
+            x = torch.cat([x, mask], dim=-1)
+        if self.cat_tp:
+            x = torch.cat([x, tp], dim=-1)
         # forward rnn
         x, hidden = self.rnn(x)
         # global pooling
@@ -115,7 +148,14 @@ class probLSTM(nn.Module):
     def __init__(self, opt):
         super(probLSTM, self).__init__()
         # define the hyper-parameters for model architecture
-        self.input_size = opt.input_size
+        self.cat_mask = opt.cat_mask
+        self.cat_tp = opt.cat_tp
+        if self.cat_mask:
+            self.input_size = opt.input_size * 2
+        else:
+            self.input_size = opt.input_size
+        if self.cat_tp:
+            self.input_size = self.input_size + 1
         self.hidden_size = opt.hidden_size
         self.num_layers = opt.num_layers
         self.n_sghmc = opt.n_sghmc
@@ -138,6 +178,10 @@ class probLSTM(nn.Module):
 
     def forward(self, x, tp=None, mask=None):
         batch, frame, _ = x.size()
+        if self.cat_mask:
+            x = torch.cat([x, mask], dim=-1)
+        if self.cat_tp:
+            x = torch.cat([x, tp], dim=-1)
         # forward rnn
         x, hidden = self.rnn(x)
         # global pooling

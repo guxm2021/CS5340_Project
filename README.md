@@ -19,9 +19,9 @@ files to implement model architectures
 
 * Transformer.py: implement model class of Transformermodel and probTransformer
 
-* TCN.py: still in working
+* TCN.py: implement model class of TCNmodel and probTCN
 
-* NeuralODE.py: still in working
+* NeuralODE.py: implement model class of ODERNNmodel and probODERNN
 
 ## tools
 * utils.py: utility functions, especially for datasets/physionnet.py

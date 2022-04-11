@@ -56,4 +56,9 @@ python run.py --gpu 0 --model TCNmodel --lr 1e-3
 python run.py --gpu 0 --model Transformermodel --lr 1e-3
 ```
 
-Bayesian Models
+* ODE RNN
+```
+python run.py --gpu 0 --model ODERNNmodel --lr 1e-3
+```
+
+### Bayesian Models

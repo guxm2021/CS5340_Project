@@ -4,6 +4,7 @@ import argparse
 import tarfile
 from tqdm import tqdm
 import numpy as np
+import random
 from torchvision.datasets.utils import download_url
 
 
@@ -35,9 +36,11 @@ def process_dataset(root, download=True, quantization = 0.016):
 
     def download_dataset():
         if _check_exists():
+            print('Downloading data has been finished. Skip this step!!!')
             return
         os.makedirs(raw_folder, exist_ok=True)
         os.makedirs(processed_folder, exist_ok=True)
+        os.makedirs(os.path.join(processed_folder, 'quantization_' + str(quantization)), exist_ok=True)
 
         # Download outcome data
         for url in outcome_urls:
@@ -123,7 +126,7 @@ def process_dataset(root, download=True, quantization = 0.016):
 
             torch.save(
                 patients,
-                os.path.join(processed_folder, 
+                os.path.join(processed_folder, 'quantization_' + str(quantization),
                     filename.split('.')[0] + "_" + str(quantization) + '.pt')
             )
                 
@@ -134,7 +137,7 @@ def process_dataset(root, download=True, quantization = 0.016):
             filename = url.rpartition('/')[2]
 
             if not os.path.exists(
-                os.path.join(processed_folder, 
+                os.path.join(processed_folder, 'quantization_' + str(quantization),
                     filename.split('.')[0] + "_" + str(quantization) + '.pt')
             ):
                 return False
@@ -145,7 +148,108 @@ def process_dataset(root, download=True, quantization = 0.016):
         download_dataset()
     return
 
+
+def sample_dataset(load_path):
+    # load_path: data/PhysioNet/processed/quantization_{}/set-a_0.016.pt
+    # prepare save path
+    path_lists = load_path.split('/')
+    path_lists[-1] = "sample-" + path_lists[-1].split('-')[1]
+    save_path = "/".join(path_lists)
+
+    # check exist:
+    if os.path.exists(save_path):
+        print("Sampling data has been finished! Skip this step!!!")
+        return save_path
     
+    # load data
+    data = torch.load(load_path)
+    
+    # shuffle data
+    random.seed(1234)         # fix the seed
+    random.shuffle(data)
+    labels = []
+    for i in range(len(data)):
+        label = data[i][-1]
+        labels.append(label.unsqueeze(dim=0))
+    labels = torch.cat(labels, dim=0)
+    
+    # sample labels to balance the dataset
+    pos_labels = labels[labels == 1]
+    neg_labels = labels[labels == 0]
+
+    pos_length = len(pos_labels)
+    neg_length = len(neg_labels)
+
+    length = min(pos_length, neg_length)
+    
+    # classify the data
+    pos_data = []
+    neg_data = []
+    for i in range(len(data)):
+        sample = data[i]
+        label = sample[-1].item()
+        if label == 0.0:
+            if len(neg_data) < length:
+                neg_data.append(sample)
+        elif label == 1.0:
+            if len(pos_data) < length:
+                pos_data.append(sample)
+        else:
+            print("Warnning! Unknown label")
+    
+    # save pos_data and neg_data
+    torch.save((pos_data, neg_data), save_path)
+    return save_path
+
+
+def split_dataset(load_path):
+    # load_path: data/PhysioNet/processed/quantization_{}/sample-a_0.016.pt
+    # prepare save path
+    pos_data, neg_data = torch.load(load_path)
+    # splits = ['train', 'valid', 'test']
+
+    path_lists = load_path.split('/')
+    path_lists.pop()
+    save_folder = "/".join(path_lists)
+    train_path = os.path.join(save_folder, "train.pt")
+    valid_path = os.path.join(save_folder, "valid.pt")
+    test_path = os.path.join(save_folder, "test.pt")
+
+    # check exist:
+    if os.path.exists(train_path) and os.path.exists(valid_path) and os.path.exists(test_path):
+        print("Splitting data has been finished! Skip this step!!!")
+        return save_folder
+    
+    # split dataset
+    # train:valid:test = 7:1:2
+    length = len(pos_data)
+    valid_length = int(length / 10)
+    test_length = int(length / 10 * 2)
+    train_length = length - valid_length - test_length
+    
+    random.seed(1234)         # fix the seed
+    # train split
+    train_data = pos_data[0:train_length]
+    train_data.extend(neg_data[0:train_length])
+    random.shuffle(train_data)
+    
+    # valid split
+    valid_data = pos_data[train_length:train_length+valid_length]
+    valid_data.extend(neg_data[train_length:train_length+valid_length])
+    random.shuffle(valid_data)
+
+    # test split
+    test_data = pos_data[train_length+valid_length:]
+    test_data.extend(neg_data[train_length+valid_length:])
+    random.shuffle(test_data)
+
+    # save data
+    torch.save(train_data, train_path)
+    torch.save(valid_data, valid_path)
+    torch.save(test_data, test_path)
+    return save_folder
+
+
 if __name__ == "__main__":
     # download dataset
     # define argparse
@@ -154,4 +258,25 @@ if __name__ == "__main__":
     parser.add_argument("--quantization", type=float, default=0.016, help="value 1 means quantization by 1 hour, value 0.1 means quantization by 0.1 hour = 6 min")
     parser.add_argument("--download", action="store_true", help="download the physionnet dataset")
     args = parser.parse_args()
+    # download and process data
     process_dataset(root = args.root, quantization = args.quantization, download=args.download)
+    
+    # sample data and balance dataset
+    load_path = os.path.join("data/PhysioNet", "processed", "quantization_" + str(args.quantization), "set-a_" + str(args.quantization) + ".pt")
+    save_path = sample_dataset(load_path)
+    
+    # split dataset into train/valid/test
+    save_folder = split_dataset(load_path=save_path)
+
+    # # check processed data files
+    # splits = ['train', 'valid', 'test']
+    # for split in splits:
+    #     split_path = os.path.join(save_folder, split + '.pt')
+    #     data = torch.load(split_path)
+    #     print(len(data))
+    #     labels = []
+    #     for i in range(len(data)):
+    #         label = data[i][-1]
+    #         labels.append(label.unsqueeze(dim=0))
+    #     labels = torch.cat(labels, dim=0)
+    #     print(labels.sum())

@@ -26,8 +26,11 @@ The `${root}` is described as below.
 ## Dataset
 PhysionNet 2012 dataset: [Predicting in-hospital mortality of icu patients: The physionet/computing in cardiology challenge 2012](https://ieeexplore.ieee.org/abstract/document/6420376)
 
-Defined in `datasets/physionnet.py`
-
+To download and process dataset, run following command:
+```
+cd root
+python datasets/process_dataset.py --root data --quantization 0.016 --download
+```
 
 
 ## Model

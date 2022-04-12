@@ -5,7 +5,7 @@ import torch.nn.functional as F
 from tools.test import Tester
 
 
-def Trainer(model, dataloader, optimizer, criterion, opt, lr_scheduler=None, skip=False):
+def Trainer(model, train_dataloader, valid_dataloader, optimizer, criterion, opt, lr_scheduler=None, skip=False):
     if skip:
         return model
     
@@ -16,7 +16,6 @@ def Trainer(model, dataloader, optimizer, criterion, opt, lr_scheduler=None, ski
 
     # start timing
     t0 = time.time()
-    weight = torch.FloatTensor([0.1375, 1-0.1375]).to(device)
     best_acc = 0.0
     best_roc = 0.0 
     for epoch in tqdm(range(epochs)):
@@ -24,19 +23,19 @@ def Trainer(model, dataloader, optimizer, criterion, opt, lr_scheduler=None, ski
         running_loss = 0.0
         num_batches = 0
         is_save = False
-        for batch_dict in dataloader:
+        for batch_dict in train_dataloader:
             # load data and labels
-            data = batch_dict['observed_data'].float()                        # (B, T, F)
+            data = batch_dict['observed_data'].float().to(device)                        # (B, T, F)
             batch_size, frame_size = data.shape[:2]
-            tp = batch_dict['observed_tp']                                    # (T,)
-            tp = tp[None, :, None].float().expand(batch_size, frame_size, 1)  # (B, T, 1)
-            mask = batch_dict['observed_mask'].float()                        # (B, T, F)
-            labels = batch_dict['labels'].float()                             # (B,)
+            tp = batch_dict['observed_tp'].to(device)                                    # (T,)
+            tp = tp[None, :, None].float().expand(batch_size, frame_size, 1)             # (B, T, 1)
+            mask = batch_dict['observed_mask'].float().to(device)                        # (B, T, F)
+            labels = batch_dict['labels'].float().to(device)                             # (B,)
             # forward, backward
             optimizer.zero_grad()
-            prob = model(data, tp, mask)               # logits
+            prob = model(data, tp, mask)                   # logits
             # log_prob = F.log_softmax(logits, dim=-1)     # log-probability
-            loss = criterion(prob, labels) # F.nll_loss(log_prob, labels, weight=weight)
+            loss = F.binary_cross_entropy(prob, labels)    # criterion(prob, labels) # F.nll_loss(log_prob, labels, weight=weight)
             loss.backward()
             optimizer.step()
             # statistic
@@ -48,20 +47,20 @@ def Trainer(model, dataloader, optimizer, criterion, opt, lr_scheduler=None, ski
         # evaluate
         t1 = time.time()
         duration = round((t1 - t0) / (epoch + 1), 2)
-        acc, roc = Tester(model=model, dataloader=dataloader, opt=opt, valid=True)
+        acc, roc = Tester(model=model, dataloader=valid_dataloader, opt=opt, valid=True)
 
         # save model
-        # if acc > best_acc:
-        #     torch.save(model.state_dict(), model_path)
-        #     best_acc = acc
-        #     is_save = True
-        if roc > best_roc:
+        if acc > best_acc:
             torch.save(model.state_dict(), model_path)
-            best_roc = roc
+            best_acc = acc
             is_save = True
+        # if roc > best_roc:
+        #     torch.save(model.state_dict(), model_path)
+        #     best_roc = roc
+        #     is_save = True
         
         # save message
-        acc_msg = '[Valid][{}] Accuracy: total average on Train dataset: {:.2f}. ROC score: {:.4f}. Whether to save better model: {}'.format(epoch+1, acc * 100, roc, is_save)
+        acc_msg = '[Valid][{}] Accuracy: total average on Valid dataset: {:.2f}. ROC score: {:.4f}. Whether to save better model: {}'.format(epoch+1, acc * 100, roc, is_save)
         loss_msg = '[Train][{}] Loss: {:.3f}. Average time in one epoch: {} s'.format(epoch+1, total_loss, duration)
         print(loss_msg)
         print(acc_msg)

@@ -16,7 +16,7 @@ def get_opt(model='GRUmodel', lr=1e-3):
     opt.extrap = False       # Set extrapolation mode. If this flag is not set, run interpolation mode
     opt.sample_tp = None     # Number of time points to sub-sample
     opt.cut_tp = None        # Cut out the section of the timeline of the specified length (in number of points)
-    opt.n_samples = 8000     # size of the dataset
+    opt.data_folder = "data"
     
     # hyper-parameters for model architecture
     opt.input_size = 41     # dimension of input dim
@@ -44,7 +44,7 @@ def get_opt(model='GRUmodel', lr=1e-3):
         opt.hidden_size = 64  # hidden dimension
         opt.num_layers = 2      # number of layers
     elif opt.model == 'TCNmodel':
-        opt.hidden_size = 128  # hidden dimension
+        opt.hidden_size = 64  # hidden dimension
         opt.num_layers = 2      # number of layers
         opt.kernel_size = 7     # kernel size 
     elif opt.model == 'probTCN':
@@ -60,8 +60,8 @@ def get_opt(model='GRUmodel', lr=1e-3):
     opt.lr = lr             # learning rate
     opt.weight_decay = 5e-4
     opt.beta = 0.9
-    opt.epochs = 20
-    opt.batch_size = 50      # batch size
+    opt.epochs = 100
+    opt.batch_size = 32      # batch size
 
     # hyper-parameters for SGHMC sampling
     opt.n_sghmc = 12         # number of SGHMC samples: 8

@@ -14,12 +14,12 @@ def Tester(model, dataloader, opt, valid=False):
     y_true = []
     for batch_dict in dataloader:
         # load data and labels
-        data = batch_dict['observed_data'].float()                        # (B, T, F)
+        data = batch_dict['observed_data'].float().to(device)                        # (B, T, F)
         batch_size, frame_size = data.shape[:2]
-        tp = batch_dict['observed_tp']                                    # (T,)
-        tp = tp[None, :, None].float().expand(batch_size, frame_size, 1)  # (B, T, 1)
-        mask = batch_dict['observed_mask'].float()                        # (B, T, F)
-        labels = batch_dict['labels'].float()                             # (B,)
+        tp = batch_dict['observed_tp'].to(device)                                    # (T,)
+        tp = tp[None, :, None].float().expand(batch_size, frame_size, 1)             # (B, T, 1)
+        mask = batch_dict['observed_mask'].float().to(device)                        # (B, T, F)
+        labels = batch_dict['labels'].float().to(device)                             # (B,)
         # forward
         prob = model(data, tp, mask)
         pred = torch.round(prob)

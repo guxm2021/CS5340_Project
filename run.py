@@ -28,9 +28,7 @@ def main(args):
 	torch.backends.cudnn.benchmark = False
 
 	# load dataset and dataloader
-	data_obj = get_dataset(opt) 
-	train_loader = data_obj['train_dataloader']
-	test_loader = data_obj['test_dataloader']
+	train_dataloader, valid_dataloader, test_dataloader = get_dataset(opt) 
 
     # load model
 	modelClass = get_model(opt.model)
@@ -46,21 +44,22 @@ def main(args):
 	num_param = 0
 	for param in model.parameters():
 		num_param += param.numel()
-	print(f"model {opt.model} parameters {round(num_param / 1e6, 2)} M")
+	print(f"model {opt.model} parameters {round(num_param / 1e3, 2)} K")
     
 	# set optimizer and criterion
 	optimizer = torch.optim.Adam(model.parameters(), lr=opt.lr, betas=(opt.beta, 0.999), weight_decay=opt.weight_decay)
 	criterion = nn.BCELoss()
 
 	# train
-	model = Trainer(model=model, dataloader=train_loader, optimizer=optimizer, criterion=criterion, opt=opt, skip=args.skip)
+	model = Trainer(model=model, train_dataloader=train_dataloader, valid_dataloader=valid_dataloader, optimizer=optimizer, 
+	                criterion=criterion, opt=opt, skip=args.skip)
 
 	# load the best model
 	print('load model from {}'.format(opt.model_path))
 	model.load_state_dict(torch.load(opt.model_path))
 
     # evaluate model
-	Tester(model=model, dataloader=test_loader, opt=opt, valid=False)
+	Tester(model=model, dataloader=test_dataloader, opt=opt, valid=False)
 
 
 if __name__ == '__main__':

@@ -1,0 +1,16 @@
+python run.py --gpu 0 --model ODERNNmodel --lr 1e-1 --quantization 0.1 --seed 2223
+python run.py --gpu 0 --model ODERNNmodel --lr 1e-2 --quantization 0.1 --seed 2223
+python run.py --gpu 0 --model ODERNNmodel --lr 1e-3 --quantization 0.1 --seed 2223
+python run.py --gpu 0 --model ODERNNmodel --lr 1e-4 --quantization 0.1 --seed 2223
+python run.py --gpu 0 --model ODERNNmodel --lr 2e-1 --quantization 0.1 --seed 2223
+python run.py --gpu 0 --model ODERNNmodel --lr 2e-2 --quantization 0.1 --seed 2223
+python run.py --gpu 0 --model ODERNNmodel --lr 2e-3 --quantization 0.1 --seed 2223
+python run.py --gpu 0 --model ODERNNmodel --lr 2e-4 --quantization 0.1 --seed 2223
+python run.py --gpu 0 --model ODERNNmodel --lr 5e-1 --quantization 0.1 --seed 2223
+python run.py --gpu 0 --model ODERNNmodel --lr 5e-2 --quantization 0.1 --seed 2223
+python run.py --gpu 0 --model ODERNNmodel --lr 5e-3 --quantization 0.1 --seed 2223
+python run.py --gpu 0 --model ODERNNmodel --lr 5e-4 --quantization 0.1 --seed 2223
+python run.py --gpu 0 --model ODERNNmodel --lr 8e-1 --quantization 0.1 --seed 2223
+python run.py --gpu 0 --model ODERNNmodel --lr 8e-2 --quantization 0.1 --seed 2223
+python run.py --gpu 0 --model ODERNNmodel --lr 8e-3 --quantization 0.1 --seed 2223
+python run.py --gpu 0 --model ODERNNmodel --lr 8e-4 --quantization 0.1 --seed 2223

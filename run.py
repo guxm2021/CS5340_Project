@@ -10,6 +10,7 @@ from model.pools import get_model
 from datasets.parse_dataset import get_dataset
 from tools.train import Trainer
 from tools.test import Tester
+from tools.sghmc import SGHMC
 
 
 def main(args):
@@ -50,8 +51,14 @@ def main(args):
 	criterion = nn.CrossEntropyLoss()
 
 	# train
-	model = Trainer(model=model, train_dataloader=train_dataloader, valid_dataloader=valid_dataloader, optimizer=optimizer, 
-	                criterion=criterion, opt=opt, skip=args.skip)
+	if args.bayes:
+		print("Starting SGHMC sampling!!!")
+		model = SGHMC(model=model, train_dataloader=train_dataloader, valid_dataloader=valid_dataloader, optimizer=optimizer, 
+	                  criterion=criterion, opt=opt, skip=args.skip)
+	else:
+		print("Starting Training!!!")
+		model = Trainer(model=model, train_dataloader=train_dataloader, valid_dataloader=valid_dataloader, optimizer=optimizer, 
+	                    criterion=criterion, opt=opt, skip=args.skip)
 
 	# load the best model
 	print('load model from {}'.format(opt.model_path))
@@ -68,6 +75,7 @@ if __name__ == '__main__':
 	parser.add_argument("--gpu", type=int, default=3, help="the num of gpu, chosen from [0, 1, 2, 3]")
 	parser.add_argument("--lr", type=float, default=1e-3, help="learning rate")
 	parser.add_argument("--skip", action="store_true", help="skipping the training stage")
+	parser.add_argument("--bayes", action="store_true", help="whether to use SGHMC sampling")
 	parser.add_argument("--seed", type=int, default=2233, help="random seed for reproducibility")
 	parser.add_argument("--quantization", type=float, default=0.1, help="value 1 means quantization by 1 hour, value 0.1 means quantization by 0.1 hour = 6 min")
 	args = parser.parse_args()

@@ -64,8 +64,9 @@ def get_opt(seed=2233, model='GRUmodel', lr=1e-3, quantization=0.1):
     opt.batch_size = 32      # batch size
 
     # hyper-parameters for SGHMC sampling
-    opt.n_sghmc = 12         # number of SGHMC samples: 8
-    opt.sghmc_alpha = 0.01   # noise alpha for SGHMC sampling
+    opt.n_sghmc = 5          # number of SGHMC samples: 8
+    opt.sghmc_alpha = 0.1     # noise alpha for SGHMC sampling
+    opt.noise_loss_lambda = 0.01 # hyper-parameter to balance likelihood and prior
 
     # experiment folder
     opt.exp = 'SeqExp_' + opt.model

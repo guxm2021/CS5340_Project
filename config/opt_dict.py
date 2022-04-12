@@ -52,9 +52,9 @@ def get_opt(seed=2233, model='GRUmodel', lr=1e-3, quantization=0.1):
         opt.num_layers = 2      # number of layers
         opt.kernel_size = 7     # kernel size 
     elif opt.model == 'ODERNNmodel':
-        opt.hidden_size = 64  # hidden dimension
+        opt.hidden_size = 196  # hidden dimension
         opt.num_layers = 2      # number of layers
-        opt.n_step = 5          # steps for ode solver
+        opt.n_step = 4          # steps for ode solver
     
     # hyper-parameters for training
     opt.lr = lr             # learning rate

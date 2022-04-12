@@ -3,7 +3,8 @@
 import torch
 import torch.nn as nn
 from torch.nn.utils import weight_norm
-from model.base import Chomp1d, GAP1d, Flatten
+from model.base import Chomp1d, GAP1d
+
 
 class TemporalBlock(nn.Module):
     def __init__(self, n_inputs, n_outputs, kernel_size, stride, dilation, padding, dropout=0.2):
@@ -74,9 +75,7 @@ class TCN(nn.Module):
     def forward(self, x):
         #  x should be a 3D array (samples, features, time-sequence steps)
         x = self.tcn(x)
-        print(x.shape)
         x = self.gap(x)
-        print(x.shape)
         if self.dropout is not None: x = self.dropout(x)
         return self.linear(x)
 
@@ -101,12 +100,8 @@ class TCNmodel(nn.Module):
         # define the model architecture
         self.tcn = TemporalConvNet(num_inputs=self.input_size, num_channels=self.num_channels, kernel_size=self.kernel_size, dropout=0.0)
         self.gap = GAP1d()
-        self.cls = nn.Sequential(
-            # nn.Linear(self.hidden_size, self.hidden_size),
-            # nn.ReLU(inplace=True),
-            nn.Linear(self.hidden_size, self.output_size),
-            nn.Sigmoid(),
-        )
+        self.cls = nn.Linear(self.hidden_size, self.output_size)
+                                 
 
     def forward(self, x, tp=None, mask=None):
         batch, frame, _ = x.size()
@@ -121,7 +116,7 @@ class TCNmodel(nn.Module):
         x = self.gap(x)                   # (B, T, F) -> (B, F)
         # x = torch.mean(x, dim=1) 
         # forward classifier
-        y = self.cls(x)  # prob
+        y = self.cls(x)  # logits
         return y
 
 
@@ -140,18 +135,15 @@ class probTCN(nn.Module):
         self.hidden_size = opt.hidden_size
         self.num_layers = opt.num_layers
         self.n_sghmc = opt.n_sghmc
+        self.num_channels = self.num_layers * [self.hidden_size]
         self.output_size = opt.output_size
+        self.kernel_size = opt.kernel_size
         # define the model architecture
         self.tcn = TemporalConvNet(num_inputs=self.input_size, num_channels=self.num_channels, kernel_size=self.kernel_size, dropout=0.0)
         self.gap = GAP1d()
         self.cls_samples = []
         for i in range(opt.n_sghmc):
-            cls = nn.Sequential(
-                #   nn.Linear(self.hidden_size, self.hidden_size),
-                #   nn.ReLU(inplace=True),
-                  nn.Linear(self.hidden_size, self.output_size),
-                  nn.Sigmoid(),
-                  )
+            cls = nn.Linear(self.hidden_size, self.output_size)
             setattr(self, 'cls_{}'.format(i), cls)
             self.cls_samples.append(cls)
 

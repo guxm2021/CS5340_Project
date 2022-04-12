@@ -4,7 +4,6 @@ import torch
 import random
 import argparse
 import numpy as np
-from tqdm import tqdm
 import torch.nn as nn
 from config.opt_dict import get_opt
 from model.pools import get_model
@@ -15,7 +14,7 @@ from tools.test import Tester
 
 def main(args):
     # load opt
-	opt = get_opt(model=args.model, lr=args.lr)
+	opt = get_opt(seed=args.seed, model=args.model, lr=args.lr, quantization=args.quantization)
 	
 	# set seeds for experiments
 	seed = opt.seed
@@ -48,7 +47,7 @@ def main(args):
     
 	# set optimizer and criterion
 	optimizer = torch.optim.Adam(model.parameters(), lr=opt.lr, betas=(opt.beta, 0.999), weight_decay=opt.weight_decay)
-	criterion = nn.BCELoss()
+	criterion = nn.CrossEntropyLoss()
 
 	# train
 	model = Trainer(model=model, train_dataloader=train_dataloader, valid_dataloader=valid_dataloader, optimizer=optimizer, 
@@ -69,6 +68,8 @@ if __name__ == '__main__':
 	parser.add_argument("--gpu", type=int, default=3, help="the num of gpu, chosen from [0, 1, 2, 3]")
 	parser.add_argument("--lr", type=float, default=1e-3, help="learning rate")
 	parser.add_argument("--skip", action="store_true", help="skipping the training stage")
+	parser.add_argument("--seed", type=int, default=2233, help="random seed for reproducibility")
+	parser.add_argument("--quantization", type=float, default=0.1, help="value 1 means quantization by 1 hour, value 0.1 means quantization by 0.1 hour = 6 min")
 	args = parser.parse_args()
     
 	# set gpu num

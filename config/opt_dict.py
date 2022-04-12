@@ -1,7 +1,7 @@
 from easydict import EasyDict
 import os
 
-def get_opt(model='GRUmodel', lr=1e-3):
+def get_opt(seed=2233, model='GRUmodel', lr=1e-3, quantization=0.1):
     # set experiment configs
     opt = EasyDict()
     # choose a model from ["GRUmodel", "LSTMmodel", "probGRU", "probLSTM", "Transformermodel", "probTransformer", "TCNmodel", "probTCN"]
@@ -9,10 +9,10 @@ def get_opt(model='GRUmodel', lr=1e-3):
     # choose run on which device ["cuda", "cpu"]
     opt.device = "cuda"
     # set random seed
-    opt.seed = 1234
+    opt.seed = seed
 
     # hyper-parameters for dataset
-    opt.quantization = 0.016 # value 1 means quantization by 1 hour, value 0.1 means quantization by 0.1 hour = 6 min
+    opt.quantization = quantization # value 1 means quantization by 1 hour, value 0.1 means quantization by 0.1 hour = 6 min
     opt.extrap = False       # Set extrapolation mode. If this flag is not set, run interpolation mode
     opt.sample_tp = None     # Number of time points to sub-sample
     opt.cut_tp = None        # Cut out the section of the timeline of the specified length (in number of points)
@@ -20,9 +20,9 @@ def get_opt(model='GRUmodel', lr=1e-3):
     
     # hyper-parameters for model architecture
     opt.input_size = 41     # dimension of input dim
-    opt.output_size = 1     # dimension of output dim
-    opt.cat_mask = False    # whether to use mask
-    opt.cat_tp = False      # whether to use time points
+    opt.output_size = 2     # dimension of output dim
+    opt.cat_mask = True    # whether to use mask
+    opt.cat_tp = True      # whether to use time points
     
     # hyper-parameters for specific model
     if opt.model == 'GRUmodel':
@@ -32,13 +32,13 @@ def get_opt(model='GRUmodel', lr=1e-3):
         opt.hidden_size = 64  # hidden dimension
         opt.num_layers = 2      # number of layers
     elif opt.model == 'LSTMmodel':
-        opt.hidden_size = 64  # hidden dimension
+        opt.hidden_size = 54  # hidden dimension
         opt.num_layers = 2      # number of layers
     elif opt.model == 'probLSTM':
         opt.hidden_size = 64  # hidden dimension
         opt.num_layers = 2      # number of layers
     elif opt.model == 'Transformermodel':
-        opt.hidden_size = 64  # hidden dimension
+        opt.hidden_size = 100  # hidden dimension
         opt.num_layers = 2      # number of layers
     elif opt.model == 'probTransformer':
         opt.hidden_size = 64  # hidden dimension
@@ -60,7 +60,7 @@ def get_opt(model='GRUmodel', lr=1e-3):
     opt.lr = lr             # learning rate
     opt.weight_decay = 5e-4
     opt.beta = 0.9
-    opt.epochs = 100
+    opt.epochs = 50
     opt.batch_size = 32      # batch size
 
     # hyper-parameters for SGHMC sampling
@@ -69,7 +69,7 @@ def get_opt(model='GRUmodel', lr=1e-3):
 
     # experiment folder
     opt.exp = 'SeqExp_' + opt.model
-    opt.outf = './dump/' + opt.exp + '_seed_' + str(opt.seed) + '_lr_' + str(opt.lr)
+    opt.outf = './dump/' + opt.exp + '/seed_' + str(opt.seed) + '/lr_' + str(opt.lr) + '_quantization_' + str(opt.quantization)
     opt.train_log = opt.outf + '/train.log'
     opt.model_path = opt.outf + '/model.pth'
 

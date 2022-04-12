@@ -30,12 +30,12 @@ def Trainer(model, train_dataloader, valid_dataloader, optimizer, criterion, opt
             tp = batch_dict['observed_tp'].to(device)                                    # (T,)
             tp = tp[None, :, None].float().expand(batch_size, frame_size, 1)             # (B, T, 1)
             mask = batch_dict['observed_mask'].float().to(device)                        # (B, T, F)
-            labels = batch_dict['labels'].float().to(device)                             # (B,)
+            labels = batch_dict['labels'].squeeze(dim=1).long().to(device)                             # (B,)
             # forward, backward
             optimizer.zero_grad()
-            prob = model(data, tp, mask)                   # logits
-            # log_prob = F.log_softmax(logits, dim=-1)     # log-probability
-            loss = F.binary_cross_entropy(prob, labels)    # criterion(prob, labels) # F.nll_loss(log_prob, labels, weight=weight)
+            logits = model(data, tp, mask)                   # logits
+            log_prob = F.log_softmax(logits, dim=-1)         # log-probability
+            loss = F.nll_loss(log_prob, labels)
             loss.backward()
             optimizer.step()
             # statistic
@@ -47,7 +47,7 @@ def Trainer(model, train_dataloader, valid_dataloader, optimizer, criterion, opt
         # evaluate
         t1 = time.time()
         duration = round((t1 - t0) / (epoch + 1), 2)
-        acc, roc = Tester(model=model, dataloader=valid_dataloader, opt=opt, valid=True)
+        acc = Tester(model=model, dataloader=valid_dataloader, opt=opt, valid=True)
 
         # save model
         if acc > best_acc:
@@ -60,7 +60,7 @@ def Trainer(model, train_dataloader, valid_dataloader, optimizer, criterion, opt
         #     is_save = True
         
         # save message
-        acc_msg = '[Valid][{}] Accuracy: total average on Valid dataset: {:.2f}. ROC score: {:.4f}. Whether to save better model: {}'.format(epoch+1, acc * 100, roc, is_save)
+        acc_msg = '[Valid][{}] Accuracy: total average on Valid dataset: {:.2f}. Whether to save better model: {}'.format(epoch+1, acc * 100, is_save)
         loss_msg = '[Train][{}] Loss: {:.3f}. Average time in one epoch: {} s'.format(epoch+1, total_loss, duration)
         print(loss_msg)
         print(acc_msg)

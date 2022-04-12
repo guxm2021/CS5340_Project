@@ -21,14 +21,9 @@ class GRUmodel(nn.Module):
         
         # define the model architecture
         self.rnn = nn.GRU(input_size=self.input_size, hidden_size=self.hidden_size, 
-                          num_layers=self.num_layers, batch_first=True, bidirectional=False)
+                          num_layers=self.num_layers, batch_first=True, bidirectional=True)
         self.gap = GAP1d()
-        self.cls = nn.Sequential(
-            # nn.Linear(self.hidden_size, self.hidden_size),
-            # nn.ReLU(inplace=True),
-            nn.Linear(self.hidden_size, self.output_size),
-            nn.Sigmoid(),
-        )
+        self.cls = nn.Linear(self.hidden_size * 2, self.output_size)
 
     def forward(self, x, tp=None, mask=None):
         batch, frame, _ = x.size()
@@ -65,14 +60,9 @@ class LSTMmodel(nn.Module):
         
         # define the model architecture
         self.rnn = nn.LSTM(input_size=self.input_size, hidden_size=self.hidden_size, 
-                          num_layers=self.num_layers, batch_first=True, bidirectional=False)
+                           num_layers=self.num_layers, batch_first=True, bidirectional=True)
         self.gap = GAP1d()
-        self.cls = nn.Sequential(
-            # nn.Linear(self.hidden_size, self.hidden_size),
-            # nn.ReLU(inplace=True),
-            nn.Linear(self.hidden_size, self.output_size),
-            nn.Sigmoid(),
-        )
+        self.cls = nn.Linear(self.hidden_size * 2, self.output_size)
 
     def forward(self, x, tp=None, mask=None):
         batch, frame, _ = x.size()
@@ -109,16 +99,11 @@ class probGRU(nn.Module):
         self.output_size = opt.output_size
         # define the model architecture
         self.rnn = nn.GRU(input_size=self.input_size, hidden_size=self.hidden_size, 
-                          num_layers=self.num_layers, batch_first=True, bidirectional=False)
+                          num_layers=self.num_layers, batch_first=True, bidirectional=True)
         self.gap = GAP1d()
         self.cls_samples = []
         for i in range(opt.n_sghmc):
-            cls = nn.Sequential(
-                #   nn.Linear(self.hidden_size, self.hidden_size),
-                #   nn.ReLU(inplace=True),
-                  nn.Linear(self.hidden_size, self.output_size),
-                  nn.Sigmoid(),
-                  )
+            cls = nn.Linear(self.hidden_size * 2, self.output_size)
             setattr(self, 'cls_{}'.format(i), cls)
             self.cls_samples.append(cls)
 
@@ -162,16 +147,11 @@ class probLSTM(nn.Module):
         self.output_size = opt.output_size
         # define the model architecture
         self.rnn = nn.LSTM(input_size=self.input_size, hidden_size=self.hidden_size, 
-                           num_layers=self.num_layers, batch_first=True, bidirectional=False)
+                           num_layers=self.num_layers, batch_first=True, bidirectional=True)
         self.gap = GAP1d()
         self.cls_samples = []
         for i in range(opt.n_sghmc):
-            cls = nn.Sequential(
-                #   nn.Linear(self.hidden_size, self.hidden_size),
-                #   nn.ReLU(inplace=True),
-                  nn.Linear(self.hidden_size, self.output_size),
-                  nn.Sigmoid(),
-                  )
+            cls = nn.Linear(self.hidden_size * 2, self.output_size)
             setattr(self, 'cls_{}'.format(i), cls)
             self.cls_samples.append(cls)
 

@@ -12,8 +12,6 @@ class ODERNNmodel(nn.Module):
             self.input_size = opt.input_size * 2
         else:
             self.input_size = opt.input_size
-        if self.cat_tp:
-            self.input_size = self.input_size + 1
         self.hidden_size = opt.hidden_size
         self.num_layers = opt.num_layers
         self.output_size = opt.output_size
@@ -28,16 +26,13 @@ class ODERNNmodel(nn.Module):
         self.ode_func = nn.Sequential(*self.layers)
         self.rnn_cell = nn.RNNCell(input_size=self.input_size, hidden_size=self.hidden_size)
         self.gap = GAP1d()
-        self.cls = nn.Sequential(
-            # nn.Linear(self.hidden_size, self.hidden_size),
-            # nn.ReLU(inplace=True),
-            nn.Linear(self.hidden_size, self.output_size),
-            nn.Sigmoid(),
-        )
+        self.cls = nn.Linear(self.hidden_size, self.output_size)
     
     def forward(self, x, tp=None, mask=None):
         # x: (B, T, 41)  tp: (B, T, 1)  mask: (B, T, 41)
         batch, frame, _ = x.size()
+        if self.cat_mask:
+            x = torch.cat([x, mask], dim=-1)
         hidden_states = []
         hi = torch.zeros(batch, self.hidden_size).float().to(x.device)  # initialize 
         for i in range(frame):
@@ -81,8 +76,6 @@ class probODERNN(nn.Module):
             self.input_size = opt.input_size * 2
         else:
             self.input_size = opt.input_size
-        if self.cat_tp:
-            self.input_size = self.input_size + 1
         self.hidden_size = opt.hidden_size
         self.num_layers = opt.num_layers
         self.output_size = opt.output_size
@@ -99,18 +92,15 @@ class probODERNN(nn.Module):
         self.gap = GAP1d()
         self.cls_samples = []
         for i in range(opt.n_sghmc):
-            cls = nn.Sequential(
-                #   nn.Linear(self.hidden_size, self.hidden_size),
-                #   nn.ReLU(inplace=True),
-                  nn.Linear(self.hidden_size, self.output_size),
-                  nn.Sigmoid(),
-                  )
+            cls = nn.Linear(self.hidden_size, self.output_size)
             setattr(self, 'cls_{}'.format(i), cls)
             self.cls_samples.append(cls)
     
     def forward(self, x, tp=None, mask=None):
         # x: (B, T, 41)  tp: (B, T, 1)  mask: (B, T, 41)
         batch, frame, _ = x.size()
+        if self.cat_mask:
+            x = torch.cat([x, mask], dim=-1)
         hidden_states = []
         hi = torch.zeros(batch, self.hidden_size).float().to(x.device)  # initialize 
         for i in range(frame):

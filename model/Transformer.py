@@ -245,14 +245,9 @@ class Transformermodel(nn.Module):
             nn.ReLU(),
         )
         self.encoder = TransformerEncoder(num_layers=self.num_layers, nhead=4, d_ffn=self.hidden_size, d_model=self.hidden_size)
-        self.positional_encoding = PositionalEncoding(input_size=self.hidden_size, max_len=5000)
+        self.positional_encoding = PositionalEncoding(input_size=self.hidden_size, max_len=2500)
         self.gap = GAP1d()
-        self.cls = nn.Sequential(
-            # nn.Linear(hidden_size, hidden_size),
-            # nn.ReLU(inplace=True),
-            nn.Linear(self.hidden_size, self.output_size),
-            nn.Sigmoid(),
-        )
+        self.cls = nn.Linear(self.hidden_size, self.output_size)
 
     def forward(self, x, tp=None, mask=None):
         batch, frame, _ = x.size()
@@ -297,12 +292,7 @@ class probTransformer(nn.Module):
         self.gap = GAP1d()
         self.cls_samples = []
         for i in range(opt.n_sghmc):
-            cls = nn.Sequential(
-                #   nn.Linear(self.hidden_size, self.hidden_size),
-                #   nn.ReLU(inplace=True),
-                  nn.Linear(self.hidden_size, self.output_size),
-                  nn.Sigmoid(),
-                  )
+            cls = nn.Linear(self.hidden_size, self.output_size)
             setattr(self, 'cls_{}'.format(i), cls)
             self.cls_samples.append(cls)
 

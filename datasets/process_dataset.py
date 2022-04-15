@@ -52,7 +52,8 @@ def process_dataset(root, download=True, quantization = 0.016):
             filename = url.rpartition('/')[2]
             txtfile = os.path.join(raw_folder, filename)
             if not os.path.exists(txtfile):
-                download_url(url, raw_folder, filename, None)
+                print(txtfile, 'not found')
+                # download_url(url, raw_folder, filename, None)
 
             with open(txtfile) as f:
                 lines = f.readlines()
@@ -72,10 +73,11 @@ def process_dataset(root, download=True, quantization = 0.016):
             dirname = os.path.join(raw_folder, filename.split('.')[0])
 
             if not os.path.exists(dirname):
-                download_url(url, raw_folder, filename, None)
-                tar = tarfile.open(os.path.join(raw_folder, filename), "r:gz")
-                tar.extractall(raw_folder)
-                tar.close()
+                print(dirname, 'not found')
+                # download_url(url, raw_folder, filename, None)
+                # tar = tarfile.open(os.path.join(raw_folder, filename), "r:gz")
+                # tar.extractall(raw_folder)
+                # tar.close()
 
             print('Processing {}...'.format(filename))
 

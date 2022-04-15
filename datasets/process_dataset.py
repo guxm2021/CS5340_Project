@@ -13,9 +13,14 @@ def process_dataset(root, download=True, quantization = 0.016):
     urls = [
         'https://physionet.org/files/challenge-2012/1.0.0/set-a.tar.gz?download',
         'https://physionet.org/files/challenge-2012/1.0.0/set-b.tar.gz?download',
+        # 'https://physionet.org/files/challenge-2012/1.0.0/set-c.tar.gz?download'
     ]
 
-    outcome_urls = ['https://physionet.org/files/challenge-2012/1.0.0/Outcomes-a.txt']
+    outcome_urls = [
+        'https://physionet.org/files/challenge-2012/1.0.0/Outcomes-a.txt',
+        # 'https://physionet.org/files/challenge-2012/1.0.0/Outcomes-b.txt',
+        # 'https://physionet.org/files/challenge-2012/1.0.0/Outcomes-c.txt'
+    ]
 
     params = [
         'Age', 'Gender', 'Height', 'ICUType', 'Weight', 'Albumin', 'ALP', 'ALT', 'AST', 'Bilirubin', 'BUN',
@@ -45,9 +50,10 @@ def process_dataset(root, download=True, quantization = 0.016):
         # Download outcome data
         for url in outcome_urls:
             filename = url.rpartition('/')[2]
-            download_url(url, raw_folder, filename, None)
-
             txtfile = os.path.join(raw_folder, filename)
+            if not os.path.exists(txtfile):
+                download_url(url, raw_folder, filename, None)
+
             with open(txtfile) as f:
                 lines = f.readlines()
                 outcomes = {}
@@ -63,14 +69,16 @@ def process_dataset(root, download=True, quantization = 0.016):
 
         for url in urls:
             filename = url.rpartition('/')[2]
-            download_url(url, raw_folder, filename, None)
-            tar = tarfile.open(os.path.join(raw_folder, filename), "r:gz")
-            tar.extractall(raw_folder)
-            tar.close()
+            dirname = os.path.join(raw_folder, filename.split('.')[0])
+
+            if not os.path.exists(dirname):
+                download_url(url, raw_folder, filename, None)
+                tar = tarfile.open(os.path.join(raw_folder, filename), "r:gz")
+                tar.extractall(raw_folder)
+                tar.close()
 
             print('Processing {}...'.format(filename))
 
-            dirname = os.path.join(raw_folder, filename.split('.')[0])
             patients = []
             total = 0
             for txtfile in tqdm(os.listdir(dirname)):

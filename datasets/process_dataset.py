@@ -13,13 +13,19 @@ def process_dataset(root, download=True, quantization = 0.016):
     urls = [
         'https://physionet.org/files/challenge-2012/1.0.0/set-a.tar.gz?download',
         'https://physionet.org/files/challenge-2012/1.0.0/set-b.tar.gz?download',
-        # 'https://physionet.org/files/challenge-2012/1.0.0/set-c.tar.gz?download'
+        'https://physionet.org/files/challenge-2012/1.0.0/set-c.tar.gz?download'
     ]
 
     outcome_urls = [
         'https://physionet.org/files/challenge-2012/1.0.0/Outcomes-a.txt',
-        # 'https://physionet.org/files/challenge-2012/1.0.0/Outcomes-b.txt',
-        # 'https://physionet.org/files/challenge-2012/1.0.0/Outcomes-c.txt'
+        'https://physionet.org/files/challenge-2012/1.0.0/Outcomes-b.txt',
+        'https://physionet.org/files/challenge-2012/1.0.0/Outcomes-c.txt'
+    ]
+
+    datasets =[
+        ('https://physionet.org/files/challenge-2012/1.0.0/set-a.tar.gz?download', 'https://physionet.org/files/challenge-2012/1.0.0/Outcomes-a.txt'),
+        ('https://physionet.org/files/challenge-2012/1.0.0/set-b.tar.gz?download', 'https://physionet.org/files/challenge-2012/1.0.0/Outcomes-b.txt'),
+        ('https://physionet.org/files/challenge-2012/1.0.0/set-c.tar.gz?download', 'https://physionet.org/files/challenge-2012/1.0.0/Outcomes-c.txt')
     ]
 
     params = [
@@ -47,37 +53,33 @@ def process_dataset(root, download=True, quantization = 0.016):
         os.makedirs(processed_folder, exist_ok=True)
         os.makedirs(os.path.join(processed_folder, 'quantization_' + str(quantization)), exist_ok=True)
 
-        # Download outcome data
-        for url in outcome_urls:
-            filename = url.rpartition('/')[2]
-            txtfile = os.path.join(raw_folder, filename)
-            if not os.path.exists(txtfile):
-                print(txtfile, 'not found')
-                # download_url(url, raw_folder, filename, None)
+        for (url, outcome_url) in datasets:
+            # Download outcome data
+            filename = outcome_url.rpartition('/')[2]
+            outcomefile = os.path.join(raw_folder, filename)
+            if not os.path.exists(outcomefile):
+                download_url(outcome_url, raw_folder, filename, None)
 
-            with open(txtfile) as f:
+            with open(outcomefile) as f:
                 lines = f.readlines()
                 outcomes = {}
                 for l in lines[1:]:
                     l = l.rstrip().split(',')
                     record_id, labels = l[0], np.array(l[1:]).astype(float)
                     outcomes[record_id] = torch.Tensor(labels)
-
                 torch.save(
                     labels,
                     os.path.join(processed_folder, filename.split('.')[0] + '.pt')
                 )
 
-        for url in urls:
             filename = url.rpartition('/')[2]
             dirname = os.path.join(raw_folder, filename.split('.')[0])
 
             if not os.path.exists(dirname):
-                print(dirname, 'not found')
-                # download_url(url, raw_folder, filename, None)
-                # tar = tarfile.open(os.path.join(raw_folder, filename), "r:gz")
-                # tar.extractall(raw_folder)
-                # tar.close()
+                download_url(url, raw_folder, filename, None)
+                tar = tarfile.open(os.path.join(raw_folder, filename), "r:gz")
+                tar.extractall(raw_folder)
+                tar.close()
 
             print('Processing {}...'.format(filename))
 
@@ -107,6 +109,8 @@ def process_dataset(root, download=True, quantization = 0.016):
                             mask.append(torch.zeros(len(params)))
                             nobs.append(torch.zeros(len(params)))
                             prev_time = time
+                        if param == '':
+                            continue
 
                         if param in params_dict:
                             #vals[-1][self.params_dict[param]] = float(val)
@@ -120,17 +124,18 @@ def process_dataset(root, download=True, quantization = 0.016):
                             mask[-1][params_dict[param]] = 1
                             nobs[-1][params_dict[param]] += 1
                         else:
-                            assert param == 'RecordID', 'Read unexpected param {}'.format(param)
+                            assert param == 'RecordID', 'Read unexpected param {} {}'.format(param, txtfile)
                 tt = torch.tensor(tt)
                 vals = torch.stack(vals)
                 mask = torch.stack(mask)
 
                 labels = None
                 if record_id in outcomes:
-                    # Only training set has labels
                     labels = outcomes[record_id]
                     # Out of 5 label types provided for Physionet, take only the last one -- mortality
                     labels = labels[4]
+                else:
+                    assert record_id in outcomes, 'Cannot find {} in outcomes'.format(record_id)
 
                 patients.append((record_id, tt, vals, mask, labels))
 
@@ -162,17 +167,28 @@ def process_dataset(root, download=True, quantization = 0.016):
 def sample_dataset(load_path):
     # load_path: data/PhysioNet/processed/quantization_{}/set-a_0.016.pt
     # prepare save path
-    path_lists = load_path.split('/')
-    path_lists[-1] = "sample-" + path_lists[-1].split('-')[1]
-    save_path = "/".join(path_lists)
+    if type(load_path) is not list:
+        path_lists = load_path.split('/')
+        path_lists[-1] = "sample-" + path_lists[-1].split('-')[1]
+        save_path = "/".join(path_lists)
 
-    # check exist:
-    if os.path.exists(save_path):
-        print("Sampling data has been finished! Skip this step!!!")
-        return save_path
+        # check exist:
+        if os.path.exists(save_path):
+            print("Sampling data has been finished! Skip this step!!!")
+            return save_path
     
-    # load data
-    data = torch.load(load_path)
+        # load data
+        data = torch.load(load_path)
+    else:
+        data = None
+        for lp in load_path:
+            if data is None:
+                data = torch.load(lp)
+            else:
+                data.extend(torch.load(lp))
+        path_lists = load_path[0].split('/')
+        path_lists[-1] = "sample"
+        save_path = "/".join(path_lists)
     
     # shuffle data
     random.seed(1234)         # fix the seed
@@ -272,8 +288,12 @@ if __name__ == "__main__":
     process_dataset(root = args.root, quantization = args.quantization, download=args.download)
     
     # sample data and balance dataset
-    load_path = os.path.join("data/PhysioNet", "processed", "quantization_" + str(args.quantization), "set-a_" + str(args.quantization) + ".pt")
-    save_path = sample_dataset(load_path)
+    # load_path = 
+    save_path = sample_dataset([
+        os.path.join("data/PhysioNet", "processed", "quantization_" + str(args.quantization), "set-a_" + str(args.quantization) + ".pt"),
+        os.path.join("data/PhysioNet", "processed", "quantization_" + str(args.quantization), "set-b_" + str(args.quantization) + ".pt"),
+        os.path.join("data/PhysioNet", "processed", "quantization_" + str(args.quantization), "set-c_" + str(args.quantization) + ".pt")
+    ])
     
     # split dataset into train/valid/test
     save_folder = split_dataset(load_path=save_path)

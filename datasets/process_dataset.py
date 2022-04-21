@@ -34,6 +34,10 @@ def process_dataset(root, download=True, quantization = 0.016):
         'MAP', 'MechVent', 'Na', 'NIDiasABP', 'NIMAP', 'NISysABP', 'PaCO2', 'PaO2', 'pH', 'Platelets', 'RespRate',
         'SaO2', 'SysABP', 'Temp', 'TroponinI', 'TroponinT', 'Urine', 'WBC'
     ]
+    # params = [
+    #     'Gender', 'ICUType',
+    #     'BUN', 'GCS', 'HCO3', 'HCT', 'Na', 'Urine', 'MechVent'
+    # ]
 
     params_dict = {k: i for i, k in enumerate(params)}
 
@@ -123,8 +127,8 @@ def process_dataset(root, download=True, quantization = 0.016):
                                 vals[-1][params_dict[param]] = float(val)
                             mask[-1][params_dict[param]] = 1
                             nobs[-1][params_dict[param]] += 1
-                        else:
-                            assert param == 'RecordID', 'Read unexpected param {} {}'.format(param, txtfile)
+                        # else:
+                        #     assert param == 'RecordID', 'Read unexpected param {} {}'.format(param, txtfile)
                 tt = torch.tensor(tt)
                 vals = torch.stack(vals)
                 mask = torch.stack(mask)

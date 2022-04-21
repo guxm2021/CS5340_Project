@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 from model.base import GAP1d
-
+from model.bayes.linear import BBBLinear
 
 class GRUmodel(nn.Module):
     def __init__(self, opt):
@@ -24,6 +24,7 @@ class GRUmodel(nn.Module):
                           num_layers=self.num_layers, batch_first=True, bidirectional=True)
         self.gap = GAP1d()
         self.cls = nn.Linear(self.hidden_size * 2, self.output_size)
+        # self.cls = BBBLinear(self.hidden_size * 2, self.output_size)
 
     def forward(self, x, tp=None, mask=None):
         batch, frame, _ = x.size()
@@ -104,6 +105,7 @@ class probGRU(nn.Module):
         self.cls_samples = []
         for i in range(opt.n_sghmc):
             cls = nn.Linear(self.hidden_size * 2, self.output_size)
+            # cls = BBBLinear(self.hidden_size * 2, self.output_size)
             setattr(self, 'cls_{}'.format(i), cls)
             self.cls_samples.append(cls)
 

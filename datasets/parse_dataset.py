@@ -65,7 +65,7 @@ class PhysioNet(object):
         self.opt = opt
         self.root = opt.data_folder
         self.split = split
-        self.data_path = os.path.join(self.processed_folder, 'quantization_' + str(opt.quantization),  self.split + ".pt")
+        self.data_path = os.path.join(self.processed_folder, 'quantization_' + str(opt.quantization), 'all', self.split + ".pt")
         # check exists
         if os.path.exists(self.data_path):
             self.data = torch.load(self.data_path)

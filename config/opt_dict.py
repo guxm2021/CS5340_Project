@@ -42,16 +42,10 @@ def get_opt(seed=2233, model='GRUmodel', lr=1e-3, quantization=0.1, n_sghmc=8, a
         opt.hidden_size = 196  # hidden dimension
         opt.num_layers = 2      # number of layers
         opt.n_step = 4          # steps for ode solver
-    elif opt.model == 'probGRU1':
+    elif opt.model == 'probGRU':
         opt.hidden_size = 64  # hidden dimension
         opt.num_layers = 2      # number of layers
-    elif opt.model == 'probGRU2':
-        opt.hidden_size = 64  # hidden dimension
-        opt.num_layers = 2      # number of layers
-    elif opt.model == 'probGRU3':
-        opt.hidden_size = 64  # hidden dimension
-        opt.num_layers = 2      # number of layers
-    
+
     # hyper-parameters for training
     opt.lr = lr # 0.005            # learning rate
     opt.weight_decay = 5e-4

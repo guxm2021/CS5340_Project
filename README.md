@@ -52,27 +52,27 @@ Training and Evaluation are implemented in `tools/train.py` and `tools/test.py`.
 
 * GRU
 ```
-python run.py --gpu 0 --model GRUmodel --lr 1e-3
+python run.py --gpu 0 --model GRUmodel --lr 5e-3
 ```
 
 * LSTM
 ```
-python run.py --gpu 0 --model LSTMmodel --lr 1e-3
+python run.py --gpu 0 --model LSTMmodel --lr 1e-4
 ```
 
 * TCN
 ```
-python run.py --gpu 0 --model TCNmodel --lr 1e-3
+python run.py --gpu 0 --model TCNmodel --lr 2e-3
 ```
 
 * Transformer
 ```
-python run.py --gpu 0 --model Transformermodel --lr 1e-3
+python run.py --gpu 0 --model Transformermodel --lr 5e-4
 ```
 
-* ODE RNN
+* ODE-RNN
 ```
-python run.py --gpu 0 --model ODERNNmodel --lr 1e-3
+python run.py --gpu 0 --model ODERNNmodel --lr 5e-4
 ```
 
 ### Bayesian Models
@@ -80,8 +80,8 @@ python run.py --gpu 0 --model ODERNNmodel --lr 1e-3
 
 ![image](https://github.com/guxm2021/CS5340_Project/blob/main/assets/SGHMC.png)
 
-* TCN
+* Bayesian GRU
 ```
-python run.py --gpu 0 --model probTCN --lr 1e-3 --bayes
+python run.py --gpu 0 --model probGRU --lr 5e-3 --bayes --n_sghmc 4 --alpha 0.01 --lambda_noise 0.001
 ```
 

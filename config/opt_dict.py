@@ -1,7 +1,7 @@
 from easydict import EasyDict
 import os
 
-def get_opt(seed=2233, model='GRUmodel', lr=1e-3, quantization=0.1):
+def get_opt(seed=2233, model='GRUmodel', lr=1e-3, quantization=0.1, n_sghmc=8, alpha=0.1, lambda_noise=0.01, bayes=False):
     # set experiment configs
     opt = EasyDict()
     # choose a model from ["GRUmodel", "LSTMmodel", "probGRU", "probLSTM", "Transformermodel", "probTransformer", "TCNmodel", "probTCN"]
@@ -28,26 +28,13 @@ def get_opt(seed=2233, model='GRUmodel', lr=1e-3, quantization=0.1):
     if opt.model == 'GRUmodel':
         opt.hidden_size = 64  # hidden dimension
         opt.num_layers = 2      # number of layers
-    elif opt.model == 'probGRU':
-        opt.hidden_size = 64  # hidden dimension
-        opt.num_layers = 2      # number of layers
     elif opt.model == 'LSTMmodel':
         opt.hidden_size = 54  # hidden dimension
-        opt.num_layers = 2      # number of layers
-    elif opt.model == 'probLSTM':
-        opt.hidden_size = 64  # hidden dimension
         opt.num_layers = 2      # number of layers
     elif opt.model == 'Transformermodel':
         opt.hidden_size = 100  # hidden dimension
         opt.num_layers = 2      # number of layers
-    elif opt.model == 'probTransformer':
-        opt.hidden_size = 64  # hidden dimension
-        opt.num_layers = 2      # number of layers
     elif opt.model == 'TCNmodel':
-        opt.hidden_size = 64  # hidden dimension
-        opt.num_layers = 2      # number of layers
-        opt.kernel_size = 7     # kernel size 
-    elif opt.model == 'probTCN':
         opt.hidden_size = 64  # hidden dimension
         opt.num_layers = 2      # number of layers
         opt.kernel_size = 7     # kernel size 
@@ -55,22 +42,39 @@ def get_opt(seed=2233, model='GRUmodel', lr=1e-3, quantization=0.1):
         opt.hidden_size = 196  # hidden dimension
         opt.num_layers = 2      # number of layers
         opt.n_step = 4          # steps for ode solver
+    elif opt.model == 'probGRU1':
+        opt.hidden_size = 64  # hidden dimension
+        opt.num_layers = 2      # number of layers
+    elif opt.model == 'probGRU2':
+        opt.hidden_size = 64  # hidden dimension
+        opt.num_layers = 2      # number of layers
+    elif opt.model == 'probGRU3':
+        opt.hidden_size = 64  # hidden dimension
+        opt.num_layers = 2      # number of layers
     
     # hyper-parameters for training
-    opt.lr = lr             # learning rate
+    opt.lr = lr # 0.005            # learning rate
     opt.weight_decay = 5e-4
     opt.beta = 0.9
     opt.epochs = 50
     opt.batch_size = 32      # batch size
 
     # hyper-parameters for SGHMC sampling
-    opt.n_sghmc = 5          # number of SGHMC samples: 8
-    opt.sghmc_alpha = 0.1     # noise alpha for SGHMC sampling
-    opt.noise_loss_lambda = 0.01 # hyper-parameter to balance likelihood and prior
+    opt.n_sghmc = n_sghmc # best: 4           # number of SGHMC samples
+    opt.sghmc_alpha = alpha #best: 0.01       # noise alpha for SGHMC sampling
+    opt.noise_loss_lambda = lambda_noise #best: 0.001 # hyper-parameter to balance likelihood and prior
 
     # experiment folder
     opt.exp = 'SeqExp_' + opt.model
-    opt.outf = './dump/' + opt.exp + '/seed_' + str(opt.seed) + '/lr_' + str(opt.lr) + '_quantization_' + str(opt.quantization)
+    if bayes:
+        opt.outf = './dump_uniform2/' + opt.exp + '/seed_' + str(opt.seed) + '/lr_' + str(opt.lr) + '_quantization_' \
+      + str(opt.quantization) + '_samples_' + str(opt.n_sghmc) + '_alpha_' + str(opt.sghmc_alpha) \
+      + '_lambda_' + str(opt.noise_loss_lambda)
+    else:
+        opt.outf = './dump/' + opt.exp + '/seed_' + str(opt.seed) + '/lr_' + str(opt.lr) + '_quantization_' \
+      + str(opt.quantization) + '_samples_' + str(opt.n_sghmc) + '_alpha_' + str(opt.sghmc_alpha) \
+      + '_lambda_' + str(opt.noise_loss_lambda)
+    
     opt.train_log = opt.outf + '/train.log'
     opt.model_path = opt.outf + '/model.pth'
 

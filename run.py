@@ -15,7 +15,8 @@ from tools.sghmc import SGHMC
 
 def main(args):
     # load opt
-	opt = get_opt(seed=args.seed, model=args.model, lr=args.lr, quantization=args.quantization)
+	opt = get_opt(seed=args.seed, model=args.model, lr=args.lr, quantization=args.quantization,
+	              n_sghmc = args.n_sghmc, alpha=args.alpha, lambda_noise=args.lambda_noise)
 	
 	# set seeds for experiments
 	seed = opt.seed
@@ -48,17 +49,19 @@ def main(args):
     
 	# set optimizer and criterion
 	optimizer = torch.optim.Adam(model.parameters(), lr=opt.lr, betas=(opt.beta, 0.999), weight_decay=opt.weight_decay)
+	# optimizer = torch.optim.SGD(model.parameters(), lr=opt.lr)
 	criterion = nn.CrossEntropyLoss()
+	# scheduler = torch.optim.lr_scheduler.CyclicLR(optimizer, base_lr=opt.lr, max_lr=opt.lr*5, step_size_up=100, cycle_momentum=True)
 
 	# train
 	if args.bayes:
 		print("Starting SGHMC sampling!!!")
 		model = SGHMC(model=model, train_dataloader=train_dataloader, valid_dataloader=valid_dataloader, optimizer=optimizer, 
-	                  criterion=criterion, opt=opt, skip=args.skip)
+	                  criterion=criterion, opt=opt, skip=args.skip)#, lr_scheduler=scheduler)
 	else:
 		print("Starting Training!!!")
 		model = Trainer(model=model, train_dataloader=train_dataloader, valid_dataloader=valid_dataloader, optimizer=optimizer, 
-	                    criterion=criterion, opt=opt, skip=args.skip)
+	                    criterion=criterion, opt=opt, skip=args.skip)#, lr_scheduler=scheduler)
 
 	# load the best model
 	print('load model from {}'.format(opt.model_path))
@@ -66,6 +69,7 @@ def main(args):
 
     # evaluate model
 	Tester(model=model, dataloader=test_dataloader, opt=opt, valid=False)
+	Tester(model=model, dataloader=valid_dataloader, opt=opt, valid=False)
 
 
 if __name__ == '__main__':
@@ -78,6 +82,10 @@ if __name__ == '__main__':
 	parser.add_argument("--bayes", action="store_true", help="whether to use SGHMC sampling")
 	parser.add_argument("--seed", type=int, default=2233, help="random seed for reproducibility")
 	parser.add_argument("--quantization", type=float, default=0.1, help="value 1 means quantization by 1 hour, value 0.1 means quantization by 0.1 hour = 6 min")
+    # sghmc
+	parser.add_argument("--n_sghmc", type=int, default=8, help="number of SGHMC samples")
+	parser.add_argument("--alpha", type=float, default=0.1, help="control the noise std for SGHMC")
+	parser.add_argument("--lambda_noise", type=float, default=0.01, help="balancing term for SGHMC")
 	args = parser.parse_args()
     
 	# set gpu num

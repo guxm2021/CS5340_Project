@@ -1,1 +1,0 @@
-# TODO: can use  https://github.com/kumar-shridhar/PyTorch-BayesianCNN for bayesian NNs

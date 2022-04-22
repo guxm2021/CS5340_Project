@@ -61,7 +61,7 @@ def get_opt(seed=2233, model='GRUmodel', lr=1e-3, quantization=0.1, n_sghmc=8, a
     # experiment folder
     opt.exp = 'SeqExp_' + opt.model
     if bayes:
-        opt.outf = './dump_uniform2/' + opt.exp + '/seed_' + str(opt.seed) + '/lr_' + str(opt.lr) + '_quantization_' \
+        opt.outf = './dump_uniform/' + opt.exp + '/seed_' + str(opt.seed) + '/lr_' + str(opt.lr) + '_quantization_' \
       + str(opt.quantization) + '_samples_' + str(opt.n_sghmc) + '_alpha_' + str(opt.sghmc_alpha) \
       + '_lambda_' + str(opt.noise_loss_lambda)
     else:

@@ -28,7 +28,7 @@ PhysionNet 2012 dataset: [Predicting in-hospital mortality of icu patients: The 
 
 To download and process dataset, run following command:
 ```
-python datasets/process_dataset.py --root data --quantization 0.016 --download
+python datasets/process_dataset.py --root data --quantization 0.1 --download
 ```
 
 The dataset will be splitted into train/valid/test split of proportion 7:1:2.
